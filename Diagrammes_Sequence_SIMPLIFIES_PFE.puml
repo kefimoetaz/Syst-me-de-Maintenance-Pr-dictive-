@@ -1,0 +1,247 @@
+@startuml Sequence_1_Collecte_Donnees
+title Séquence 1 : Collecte et Envoi des Données
+
+actor "Agent" as Agent
+participant "Machine" as Machine
+participant "API Server" as API
+database "Database" as DB
+
+== Collecte Périodique (Toutes les heures) ==
+
+Agent -> Agent : Timer déclenché
+activate Agent
+
+Agent -> Machine : collectSystemInfo()
+activate Machine
+Machine --> Agent : {cpu, memory, disk, temperature}
+deactivate Machine
+
+Agent -> Machine : collectSmartData()
+activate Machine
+Machine --> Agent : {diskHealth, errors}
+deactivate Machine
+
+Agent -> API : POST /api/data\n{metrics, smartData}
+activate API
+
+API -> DB : INSERT INTO system_metrics
+activate DB
+DB --> API : success
+deactivate DB
+
+API --> Agent : 200 OK
+deactivate API
+
+Agent -> Agent : logSuccess()
+deactivate Agent
+
+note right of Agent
+  L'agent collecte automatiquement
+  les données toutes les heures
+  et les envoie au serveur
+end note
+
+@enduml
+
+@startuml Sequence_2_Prediction_Alerte
+title Séquence 2 : Prédiction de Panne et Génération d'Alerte
+
+participant "Scheduler" as Cron
+participant "PredictionService" as PredService
+participant "PredictionModel" as Model
+database "Database" as DB
+participant "AlertService" as AlertSvc
+participant "User" as User
+
+== Prédiction Quotidienne ==
+
+Cron -> PredService : runDailyPredictions()
+activate PredService
+
+PredService -> DB : getAllActiveMachines()
+activate DB
+DB --> PredService : machines[]
+deactivate DB
+
+loop Pour chaque machine
+
+    PredService -> DB : getRecentMetrics(machineId, 30days)
+    activate DB
+    DB --> PredService : metrics[]
+    deactivate DB
+    
+    PredService -> Model : predictFailure(metrics)
+    activate Model
+    Model -> Model : analyze()
+    Model --> PredService : {probability, riskLevel}
+    deactivate Model
+    
+    PredService -> DB : savePrediction(prediction)
+    activate DB
+    DB --> PredService : saved
+    deactivate DB
+    
+    alt Probabilité > 70%
+        
+        PredService -> AlertSvc : createAlert(prediction)
+        activate AlertSvc
+        
+        AlertSvc -> DB : saveAlert(alert)
+        activate DB
+        DB --> AlertSvc : alertId
+        deactivate DB
+        
+        AlertSvc -> User : sendNotification(alert)
+        activate User
+        User --> AlertSvc : sent
+        deactivate User
+        
+        AlertSvc --> PredService : alertCreated
+        deactivate AlertSvc
+        
+    end
+    
+end
+
+PredService --> Cron : completed
+deactivate PredService
+
+note right of Model
+  Le modèle ML prédit les pannes
+  Si probabilité > 70%
+  → Alerte générée automatiquement
+end note
+
+@enduml
+
+@startuml Sequence_3_Traitement_Alerte
+title Séquence 3 : Traitement d'une Alerte par un Technicien
+
+actor "Technicien" as Tech
+participant "WebApp" as Web
+participant "API Server" as API
+database "Database" as DB
+participant "AlertService" as AlertSvc
+participant "MaintenanceService" as MaintSvc
+
+== Consultation de l'Alerte ==
+
+Tech -> Web : viewAlert(alertId)
+activate Web
+
+Web -> API : GET /api/alerts/{alertId}
+activate API
+
+API -> DB : getAlert(alertId)
+activate DB
+DB --> API : {alert, prediction, machine}
+deactivate DB
+
+API --> Web : alertDetails
+deactivate API
+
+Web --> Tech : Affichage Détails
+deactivate Web
+
+== Accusé de Réception ==
+
+Tech -> Web : acknowledgeAlert(alertId)
+activate Web
+
+Web -> API : POST /api/alerts/{alertId}/acknowledge
+activate API
+
+API -> AlertSvc : acknowledgeAlert(alertId, techId)
+activate AlertSvc
+
+AlertSvc -> DB : UPDATE alert SET status='ACKNOWLEDGED'
+activate DB
+DB --> AlertSvc : updated
+deactivate DB
+
+AlertSvc --> API : success
+deactivate AlertSvc
+
+API --> Web : acknowledged
+deactivate API
+
+Web --> Tech : Alerte Accusée
+deactivate Web
+
+== Création d'une Intervention ==
+
+Tech -> Web : createIntervention(alertId, machineId)
+activate Web
+
+Web -> API : POST /api/interventions
+activate API
+
+API -> MaintSvc : createIntervention(data)
+activate MaintSvc
+
+MaintSvc -> DB : INSERT INTO interventions
+activate DB
+DB --> MaintSvc : interventionId
+deactivate DB
+
+MaintSvc -> AlertSvc : updateAlertStatus(IN_PROGRESS)
+activate AlertSvc
+AlertSvc -> DB : UPDATE alert
+activate DB
+DB --> AlertSvc : updated
+deactivate DB
+AlertSvc --> MaintSvc : updated
+deactivate AlertSvc
+
+MaintSvc --> API : intervention
+deactivate MaintSvc
+
+API --> Web : created
+deactivate API
+
+Web --> Tech : Intervention Créée
+deactivate Web
+
+== Résolution ==
+
+Tech -> Web : resolveIntervention(interventionId)
+activate Web
+
+Web -> API : PUT /api/interventions/{id}/resolve
+activate API
+
+API -> MaintSvc : resolveIntervention(id)
+activate MaintSvc
+
+MaintSvc -> DB : UPDATE intervention SET status='COMPLETED'
+activate DB
+DB --> MaintSvc : updated
+deactivate DB
+
+MaintSvc -> AlertSvc : resolveAlert(alertId)
+activate AlertSvc
+AlertSvc -> DB : UPDATE alert SET status='RESOLVED'
+activate DB
+DB --> AlertSvc : updated
+deactivate DB
+AlertSvc --> MaintSvc : resolved
+deactivate AlertSvc
+
+MaintSvc --> API : resolved
+deactivate MaintSvc
+
+API --> Web : success
+deactivate API
+
+Web --> Tech : Intervention Résolue
+deactivate Web
+
+note right of Tech
+  Workflow complet :
+  1. Consultation
+  2. Accusé réception
+  3. Création intervention
+  4. Résolution
+end note
+
+@enduml

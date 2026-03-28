@@ -1,0 +1,485 @@
+@startuml
+title Diagramme de Classes - Système de Maintenance Prédictive
+
+' ============================================
+' PACKAGE: Domaine Métier (Machines et Actifs)
+' ============================================
+package "Domaine Métier" {
+    class Machine {
+        - id: String
+        - hostname: String
+        - ipAddress: String
+        - macAddress: String
+        - serialNumber: String
+        - model: String
+        - manufacturer: String
+        - purchaseDate: Date
+        - warrantyEndDate: Date
+        - status: MachineStatus
+        - location: String
+        - assignedTo: String
+        --
+        + getId(): String
+        + getStatus(): MachineStatus
+        + setStatus(status: MachineStatus): void
+        + isUnderWarranty(): boolean
+        + getAge(): int
+    }
+
+    enum MachineStatus {
+        ACTIVE
+        INACTIVE
+        MAINTENANCE
+        FAILED
+        RETIRED
+    }
+
+    class MaintenanceIntervention {
+        - id: String
+        - machineId: String
+        - type: InterventionType
+        - description: String
+        - technicianName: String
+        - startDate: DateTime
+        - endDate: DateTime
+        - cost: float
+        - partsReplaced: String[]
+        - status: String
+        --
+        + getDuration(): int
+        + getTotalCost(): float
+    }
+
+    enum InterventionType {
+        CORRECTIVE
+        PREVENTIVE
+        PREDICTIVE
+    }
+}
+
+' ============================================
+' PACKAGE: Collecte de Données
+' ============================================
+package "Collecte de Données" {
+    class Agent {
+        - machineId: String
+        - version: String
+        - lastHeartbeat: DateTime
+        - isActive: boolean
+        --
+        + collectMetrics(): SystemMetrics
+        + collectSmartData(): SmartData
+        + sendData(data: Object): boolean
+        + authenticate(): boolean
+        + checkConnection(): boolean
+    }
+
+    class SystemMetrics {
+        - id: String
+        - machineId: String
+        - timestamp: DateTime
+        - cpuUsage: float
+        - cpuTemperature: float
+        - memoryUsage: float
+        - memoryTotal: long
+        - diskUsage: float
+        - diskTotal: long
+        - networkSent: long
+        - networkReceived: long
+        - uptime: long
+        - errorCount: int
+        --
+        + getCpuUsage(): float
+        + getMemoryUsage(): float
+        + isAnomalous(): boolean
+    }
+
+    class SmartData {
+        - id: String
+        - machineId: String
+        - timestamp: DateTime
+        - diskHealth: int
+        - readErrors: int
+        - writeErrors: int
+        - reallocatedSectors: int
+        - temperature: int
+        - powerOnHours: long
+        - powerCycleCount: int
+        --
+        + getHealthPercentage(): int
+        + isCritical(): boolean
+    }
+}
+
+' ============================================
+' PACKAGE: Intelligence Artificielle
+' ============================================
+package "Intelligence Artificielle" {
+    class PredictionModel {
+        - modelVersion: String
+        - accuracy: float
+        - lastTrainingDate: DateTime
+        - features: String[]
+        --
+        + trainModel(data: SystemMetrics[]): void
+        + predictFailure(metrics: SystemMetrics): Prediction
+        + evaluateModel(): float
+        + saveModel(): void
+        + loadModel(): void
+    }
+
+    class Prediction {
+        - id: String
+        - machineId: String
+        - timestamp: DateTime
+        - probability: float
+        - riskLevel: RiskLevel
+        - estimatedFailureDate: Date
+        - confidence: float
+        - predictedComponent: String
+        --
+        + getProbability(): float
+        + getRiskLevel(): RiskLevel
+        + shouldAlert(): boolean
+    }
+
+    enum RiskLevel {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+
+    class AnomalyDetector {
+        - threshold: float
+        - algorithm: String
+        --
+        + detectAnomaly(metrics: SystemMetrics): Anomaly
+        + setThreshold(threshold: float): void
+        + analyzePattern(data: SystemMetrics[]): boolean
+    }
+
+    class Anomaly {
+        - id: String
+        - machineId: String
+        - timestamp: DateTime
+        - type: AnomalyType
+        - severity: String
+        - description: String
+        - detectedValue: float
+        - expectedValue: float
+        --
+        + getSeverity(): String
+        + getDescription(): String
+    }
+
+    enum AnomalyType {
+        CPU_SPIKE
+        MEMORY_LEAK
+        DISK_FULL
+        TEMPERATURE_HIGH
+        FREQUENT_RESTARTS
+        SMART_DEGRADATION
+    }
+
+    class HealthScoreCalculator {
+        - weights: Map<String, float>
+        --
+        + calculateScore(machine: Machine): HealthScore
+        + updateWeights(weights: Map): void
+    }
+
+    class HealthScore {
+        - machineId: String
+        - timestamp: DateTime
+        - score: int
+        - components: Map<String, int>
+        --
+        + getScore(): int
+        + getStatus(): String
+    }
+}
+
+' ============================================
+' PACKAGE: Alertes et Notifications
+' ============================================
+package "Alertes et Notifications" {
+    class Alert {
+        - id: String
+        - machineId: String
+        - type: AlertType
+        - level: AlertLevel
+        - title: String
+        - message: String
+        - createdAt: DateTime
+        - acknowledgedAt: DateTime
+        - acknowledgedBy: String
+        - status: AlertStatus
+        - priority: int
+        --
+        + acknowledge(userId: String): void
+        + isAcknowledged(): boolean
+        + getAge(): int
+    }
+
+    enum AlertType {
+        PREDICTION
+        ANOMALY
+        THRESHOLD_EXCEEDED
+        MAINTENANCE_DUE
+    }
+
+    enum AlertLevel {
+        INFO
+        WARNING
+        ERROR
+        CRITICAL
+    }
+
+    enum AlertStatus {
+        NEW
+        ACKNOWLEDGED
+        IN_PROGRESS
+        RESOLVED
+        CLOSED
+    }
+
+    class Notification {
+        - id: String
+        - alertId: String
+        - userId: String
+        - channel: NotificationChannel
+        - sentAt: DateTime
+        - status: String
+        --
+        + send(): boolean
+        + markAsRead(): void
+    }
+
+    enum NotificationChannel {
+        EMAIL
+        SMS
+        PUSH
+        DASHBOARD
+    }
+
+    class Recommendation {
+        - id: String
+        - machineId: String
+        - type: RecommendationType
+        - title: String
+        - description: String
+        - priority: int
+        - estimatedCost: float
+        - estimatedSavings: float
+        - createdAt: DateTime
+        - status: String
+        --
+        + getROI(): float
+        + accept(): void
+        + reject(reason: String): void
+    }
+
+    enum RecommendationType {
+        REPLACE
+        REPAIR
+        PREVENTIVE_MAINTENANCE
+        MONITOR
+        REALLOCATE
+    }
+}
+
+' ============================================
+' PACKAGE: Utilisateurs et Sécurité
+' ============================================
+package "Utilisateurs et Sécurité" {
+    class User {
+        - id: String
+        - username: String
+        - email: String
+        - password: String
+        - role: UserRole
+        - firstName: String
+        - lastName: String
+        - createdAt: DateTime
+        - lastLogin: DateTime
+        - isActive: boolean
+        --
+        + authenticate(password: String): boolean
+        + hasPermission(permission: String): boolean
+        + getFullName(): String
+    }
+
+    enum UserRole {
+        ADMIN
+        TECHNICIAN
+        MANAGER
+        VIEWER
+    }
+
+    class Session {
+        - id: String
+        - userId: String
+        - token: String
+        - createdAt: DateTime
+        - expiresAt: DateTime
+        - ipAddress: String
+        --
+        + isValid(): boolean
+        + refresh(): void
+        + invalidate(): void
+    }
+}
+
+' ============================================
+' PACKAGE: Reporting
+' ============================================
+package "Reporting" {
+    class Report {
+        - id: String
+        - title: String
+        - type: ReportType
+        - generatedBy: String
+        - generatedAt: DateTime
+        - format: ReportFormat
+        - filters: Map<String, Object>
+        - data: Object
+        --
+        + generateReport(): void
+        + exportPDF(): byte[]
+        + exportExcel(): byte[]
+        + exportJSON(): String
+    }
+
+    enum ReportType {
+        SYSTEM_HEALTH
+        PREDICTIONS
+        MAINTENANCE_HISTORY
+        ANOMALIES
+        COST_ANALYSIS
+    }
+
+    enum ReportFormat {
+        PDF
+        EXCEL
+        JSON
+        HTML
+    }
+
+    class Dashboard {
+        - userId: String
+        - widgets: Widget[]
+        - layout: String
+        --
+        + addWidget(widget: Widget): void
+        + removeWidget(widgetId: String): void
+        + refresh(): void
+    }
+
+    class Widget {
+        - id: String
+        - type: String
+        - title: String
+        - config: Map<String, Object>
+        --
+        + render(): Object
+        + update(): void
+    }
+}
+
+' ============================================
+' PACKAGE: Configuration
+' ============================================
+package "Configuration" {
+    class SystemConfiguration {
+        - id: String
+        - key: String
+        - value: String
+        - description: String
+        - updatedAt: DateTime
+        - updatedBy: String
+        --
+        + getValue(): String
+        + setValue(value: String): void
+    }
+
+    class AlertThreshold {
+        - id: String
+        - metric: String
+        - warningThreshold: float
+        - criticalThreshold: float
+        - enabled: boolean
+        --
+        + isExceeded(value: float): boolean
+        + getLevel(value: float): AlertLevel
+    }
+}
+
+' ============================================
+' RELATIONS
+' ============================================
+
+' Machine Relations
+Machine "1" -- "0..*" SystemMetrics : collecte >
+Machine "1" -- "0..*" SmartData : possède >
+Machine "1" -- "0..*" MaintenanceIntervention : subit >
+Machine "1" -- "0..*" Prediction : a >
+Machine "1" -- "0..*" Alert : génère >
+Machine "1" -- "0..*" Anomaly : présente >
+Machine "1" -- "1" HealthScore : a >
+Machine "1" -- "0..*" Recommendation : reçoit >
+Machine -- MachineStatus
+
+' Agent Relations
+Agent "1" -- "1" Machine : surveille >
+Agent ..> SystemMetrics : crée >
+Agent ..> SmartData : crée >
+
+' AI Relations
+PredictionModel ..> SystemMetrics : analyse >
+PredictionModel ..> SmartData : analyse >
+PredictionModel "1" -- "0..*" Prediction : génère >
+Prediction -- RiskLevel
+
+AnomalyDetector ..> SystemMetrics : analyse >
+AnomalyDetector "1" -- "0..*" Anomaly : détecte >
+Anomaly -- AnomalyType
+
+HealthScoreCalculator ..> SystemMetrics : utilise >
+HealthScoreCalculator ..> SmartData : utilise >
+HealthScoreCalculator ..> MaintenanceIntervention : utilise >
+HealthScoreCalculator "1" -- "0..*" HealthScore : calcule >
+
+' Alert Relations
+Prediction "1" -- "0..1" Alert : déclenche >
+Anomaly "1" -- "0..1" Alert : déclenche >
+Alert -- AlertType
+Alert -- AlertLevel
+Alert -- AlertStatus
+Alert "1" -- "0..*" Notification : génère >
+Notification -- NotificationChannel
+
+Prediction "1" -- "0..1" Recommendation : génère >
+Recommendation -- RecommendationType
+
+' User Relations
+User -- UserRole
+User "1" -- "0..*" Session : a >
+User "1" -- "0..*" Alert : accuse réception >
+User "1" -- "0..*" Report : génère >
+User "1" -- "0..*" MaintenanceIntervention : effectue >
+User "1" -- "0..1" Dashboard : possède >
+
+' Report Relations
+Report -- ReportType
+Report -- ReportFormat
+Dashboard "1" -- "0..*" Widget : contient >
+
+' Configuration Relations
+User "1" -- "0..*" SystemConfiguration : modifie >
+AlertThreshold ..> AlertLevel : utilise >
+
+' Maintenance Relations
+MaintenanceIntervention -- InterventionType
+
+@enduml

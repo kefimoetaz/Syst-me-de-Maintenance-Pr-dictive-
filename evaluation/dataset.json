@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "question": "Quelles machines sont à risque élevé?",
+    "reference": "Les machines à risque élevé sont celles dont la probabilité de panne dépasse 50%. Vous pouvez consulter la liste dans le tableau de bord sous la section prédictions."
+  },
+  {
+    "id": 2,
+    "question": "Combien de machines sont surveillées?",
+    "reference": "Le système surveille actuellement un ensemble de machines. Chaque machine est équipée d'un agent qui collecte les métriques système toutes les heures."
+  },
+  {
+    "id": 3,
+    "question": "Montre-moi les alertes critiques",
+    "reference": "Les alertes critiques sont les alertes de niveau HIGH ou CRITICAL actuellement actives dans le système. Elles nécessitent une intervention immédiate."
+  },
+  {
+    "id": 4,
+    "question": "Quel est le niveau de risque de la machine PC-001?",
+    "reference": "Le niveau de risque d'une machine est calculé par le modèle de Machine Learning basé sur les métriques collectées. Il peut être LOW, MEDIUM, HIGH ou CRITICAL."
+  },
+  {
+    "id": 5,
+    "question": "Qu'est-ce que la maintenance prédictive?",
+    "reference": "La maintenance prédictive utilise des algorithmes de Machine Learning pour anticiper les pannes matérielles avant qu'elles ne surviennent, en analysant les métriques système comme le CPU, la RAM et le disque."
+  },
+  {
+    "id": 6,
+    "question": "Comment interpréter une probabilité de panne de 80%?",
+    "reference": "Une probabilité de panne de 80% signifie que le modèle prédit un risque très élevé de défaillance dans les 30 prochains jours. Une intervention immédiate est recommandée."
+  },
+  {
+    "id": 7,
+    "question": "Que signifie une alerte de niveau CRITICAL?",
+    "reference": "Une alerte CRITICAL indique une situation urgente nécessitant une intervention immédiate. Elle est déclenchée lorsque la probabilité de panne dépasse 70% ou qu'un seuil critique est atteint."
+  },
+  {
+    "id": 8,
+    "question": "Quelle est la différence entre HIGH et CRITICAL?",
+    "reference": "HIGH indique un risque élevé entre 50% et 70% nécessitant une surveillance accrue. CRITICAL indique un risque supérieur à 70% nécessitant une intervention immédiate."
+  },
+  {
+    "id": 9,
+    "question": "Comment fonctionne la collecte des métriques?",
+    "reference": "Un agent Python installé sur chaque machine collecte automatiquement les métriques CPU, RAM, disque et données SMART toutes les heures, puis les envoie au backend via l'API REST."
+  },
+  {
+    "id": 10,
+    "question": "Qu'est-ce que les données SMART?",
+    "reference": "Les données SMART (Self-Monitoring, Analysis and Reporting Technology) sont des indicateurs de santé des disques durs qui permettent de détecter les signes précoces de défaillance."
+  },
+  {
+    "id": 11,
+    "question": "Comment le modèle ML prédit-il les pannes?",
+    "reference": "Le modèle Random Forest analyse les métriques historiques des 30 derniers jours pour calculer une probabilité de panne sur 7, 14 et 30 jours. Il est réentraîné quotidiennement à 2h00."
+  },
+  {
+    "id": 12,
+    "question": "Que faire si le CPU dépasse 90%?",
+    "reference": "Si le CPU dépasse 90% de manière prolongée, il faut identifier les processus consommateurs, vérifier s'il y a des tâches planifiées excessives, et envisager une mise à niveau matérielle si nécessaire."
+  },
+  {
+    "id": 13,
+    "question": "Quand les prédictions sont-elles mises à jour?",
+    "reference": "Les prédictions sont générées automatiquement chaque jour à 2h00 du matin par le service ML. Elles peuvent aussi être déclenchées manuellement via l'interface d'administration."
+  },
+  {
+    "id": 14,
+    "question": "Comment réduire le risque de panne d'une machine?",
+    "reference": "Pour réduire le risque de panne, il faut effectuer une maintenance préventive, nettoyer les composants, vérifier les températures, remplacer les disques vieillissants et mettre à jour les pilotes."
+  },
+  {
+    "id": 15,
+    "question": "Que signifie un taux d'utilisation disque de 95%?",
+    "reference": "Un taux d'utilisation disque de 95% est critique. Il faut libérer de l'espace immédiatement en supprimant les fichiers temporaires, en archivant les données ou en ajoutant de la capacité de stockage."
+  },
+  {
+    "id": 16,
+    "question": "Comment sont envoyées les alertes par email?",
+    "reference": "Les alertes par email sont envoyées automatiquement via Nodemailer lorsqu'une alerte HIGH ou CRITICAL est détectée. La configuration SMTP est définie dans les variables d'environnement du backend."
+  },
+  {
+    "id": 17,
+    "question": "Quelle est la fréquence de collecte des métriques?",
+    "reference": "Les métriques système sont collectées toutes les heures par l'agent Python. Les données SMART des disques sont également lues à chaque cycle de collecte."
+  },
+  {
+    "id": 18,
+    "question": "Comment accéder au tableau de bord?",
+    "reference": "Le tableau de bord est accessible à l'adresse http://localhost:5173 après connexion avec vos identifiants. Les administrateurs ont accès à toutes les fonctionnalités, les techniciens ont un accès en lecture."
+  },
+  {
+    "id": 19,
+    "question": "Qu'est-ce qu'une anomalie système?",
+    "reference": "Une anomalie système est un comportement inhabituel détecté par le modèle Isolation Forest, comme une consommation CPU ou mémoire anormalement élevée par rapport aux données historiques."
+  },
+  {
+    "id": 20,
+    "question": "Comment interpréter les graphiques de santé système?",
+    "reference": "Les graphiques de santé système montrent l'évolution des métriques CPU, RAM et disque dans le temps. Une tendance à la hausse prolongée indique une dégradation et un risque de panne accru."
+  }
+]

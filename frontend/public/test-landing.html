@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="min-h-screen bg-gradient-to-br from-[#3F1D94] via-[#5B3DF5] to-[#6A3DE8] relative overflow-hidden">
+        <!-- Top Navigation Bar -->
+        <nav class="relative z-50 px-8 py-6">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                        </svg>
+                    </div>
+                    <span class="text-white text-xl font-bold">PC Technician</span>
+                </div>
+
+                <!-- Navigation Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-white/90 hover:text-white transition-colors text-sm font-medium">Home</a>
+                    <a href="#" class="text-white/90 hover:text-white transition-colors text-sm font-medium">About</a>
+                    <a href="#" class="text-white/90 hover:text-white transition-colors text-sm font-medium">News</a>
+                    <a href="#" class="text-white/90 hover:text-white transition-colors text-sm font-medium">Blog</a>
+                </div>
+
+                <!-- Sign Up Button -->
+                <button class="bg-white text-[#5B3DF5] px-6 py-2.5 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm shadow-lg">
+                    Sign up
+                </button>
+            </div>
+        </nav>
+
+        <!-- Hero Section - Full Width Image with Overlay Text -->
+        <div class="relative z-10 min-h-[calc(100vh-100px)]">
+            <!-- Background Image - Full Width -->
+            <div class="absolute inset-0">
+                <img 
+                    src="/page1.png" 
+                    alt="AI Predictive Maintenance Platform" 
+                    class="w-full h-full object-contain object-center"
+                />
+            </div>
+
+            <!-- Overlay Content with White Background -->
+            <div class="relative z-20 flex items-center min-h-[calc(100vh-100px)] px-8">
+                <div class="max-w-7xl mx-auto w-full">
+                    <!-- White Background Panel for Text -->
+                    <div class="max-w-2xl bg-white rounded-3xl shadow-2xl p-12" style="background-color: white;">
+                        <!-- Logo -->
+                        <div class="mb-8">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-gradient-to-br from-[#5B3DF5] to-[#6A3DE8] rounded-xl flex items-center justify-center shadow-lg">
+                                    <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                    </svg>
+                                </div>
+                                <span class="text-2xl font-bold text-gray-900">PC Technician</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Headline -->
+                        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                            Predict and Prevent System Failures
+                        </h1>
+
+                        <!-- Description -->
+                        <p class="text-xl text-gray-600 mb-10 leading-relaxed">
+                            AI-powered predictive maintenance platform that monitors IT infrastructure and predicts failures before they happen.
+                        </p>
+
+                        <!-- Get Started Button -->
+                        <button class="px-10 py-5 bg-gradient-to-r from-[#FF4D9D] to-[#FF6B9D] text-white text-lg rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+@startuml Diagramme_Classes_Maintenance_Predictive
+
+title Diagramme de Classes - Plateforme de Maintenance Prédictive\n(Architecture Détaillée)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+' ============================================
+' MODULE 1: DATABASE MODELS (PostgreSQL)
+' ============================================
+package "Modèles de Données (PostgreSQL)" {
+  
+  class Machine {
+    - id: int
+    - hostname: string
+    - ip_address: string
+    - serial_number: string
+    - os: string
+    - created_at: datetime
+    - updated_at: datetime
+    --
+    + findAll(): Machine[]
+    + findByPk(id: int): Machine
+    + create(data: object): Machine
+    + update(data: object): void
+  }
+  
+  class User {
+    - id: int
+    - email: string
+    - password_hash: string
+    - full_name: string
+    - role: enum
+    - is_active: boolean
+    - last_login: datetime
+    - created_at: datetime
+    --
+    + authenticate(email, password): boolean
+    + updateProfile(data: object): void
+    + changePassword(newPassword: string): void
+  }
+  
+  class SystemMetrics {
+    - id: int
+    - machine_id: int
+    - timestamp: datetime
+    - cpu_usage: decimal
+    - cpu_temperature: decimal
+    - memory_usage: decimal
+    - memory_available: int
+    - memory_total: int
+    - disk_usage: decimal
+    - disk_free: bigint
+    - disk_total: bigint
+    --
+    + findByMachine(machineId: int): SystemMetrics[]
+    + getLatest(machineId: int): SystemMetrics
+  }
+  
+  class SmartData {
+    - id: int
+    - machine_id: int
+    - timestamp: datetime
+    - health_status: enum
+    - read_errors: int
+    - write_errors: int
+    - temperature: decimal
+    --
+    + findByMachine(machineId: int): SmartData[]
+    + getHealthStatus(machineId: int): string
+  }
+  
+  class Alert {
+    - id: int
+    - machine_id: int
+    - alert_type: enum
+    - severity: enum
+    - title: string
+    - message: text
+    - details: jsonb
+    - status: enum
+    - acknowledged_at: datetime
+    - resolved_at: datetime
+    - email_sent: boolean
+    --
+    + createAlert(data: object): Alert
+    + acknowledge(userId: int): void
+    + resolve(): void
+    + dismiss(): void
+  }
+  
+  class Prediction {
+    - id: int
+    - machine_id: int
+    - prediction_date: datetime
+    - failure_probability_7d: decimal
+    - failure_probability_14d: decimal
+    - failure_probability_30d: decimal
+    - risk_level: enum
+    - model_version: string
+    - contributing_factors: jsonb
+    --
+    + getLatest(machineId: int): Prediction
+    + getHistory(machineId: int): Prediction[]
+  }
+  
+  class MLModel {
+    - id: int
+    - model_id: string
+    - model_type: string
+    - version: int
+    - trained_at: datetime
+    - accuracy: decimal
+    - precision_score: decimal
+    - recall: decimal
+    - f1_score: decimal
+    - parameters: jsonb
+    - file_path: string
+    - is_active: boolean
+    --
+    + getActiveModel(type: string): MLModel
+    + setActive(): void
+  }
+}
+
+' ============================================
+' MODULE 2: BACKEND API CONTROLLERS (Node.js)
+' ============================================
+package "Contrôleurs API (Node.js)" {
+  
+  class DashboardController {
+    --
+    + getOverview(req, res): json
+    + getMachines(req, res): json
+    + getMachineMetrics(req, res): json
+    + getAlerts(req, res): json
+  }
+  
+  class AlertController {
+    --
+    + getAlerts(req, res): json
+    + getActiveAlerts(req, res): json
+    + acknowledgeAlert(req, res): json
+    + resolveAlert(req, res): json
+    + dismissAlert(req, res): json
+    + createAlert(req, res): json
+  }
+  
+  class AuthController {
+    --
+    + register(req, res): json
+    + login(req, res): json
+    + getProfile(req, res): json
+    + updateProfile(req, res): json
+    + changePassword(req, res): json
+  }
+  
+  class UserController {
+    --
+    + listUsers(req, res): json
+    + createUser(req, res): json
+    + updateRole(req, res): json
+    + deleteUser(req, res): json
+    + toggleUserStatus(req, res): json
+  }
+  
+  class ChatbotController {
+    --
+    + chat(req, res): json
+    + getSuggestions(req, res): json
+  }
+}
+
+' ============================================
+' MODULE 3: ML SERVICE (Python/Flask)
+' ============================================
+package "Service ML (Python)" {
+  
+  class Predictor {
+    - conn: connection
+    - feature_extractor: FeatureExtractor
+    - model_registry: ModelRegistry
+    - model_cache: dict
+    --
+    + predict_single(machine_id: int): dict
+    + predict_batch(machine_ids: list): list
+    + store_predictions(predictions: list): int
+    + calculate_risk_level(probability: float): string
+    + get_contributing_factors(model, features): list
+    - load_model(model_type: string): model
+  }
+  
+  class FeatureExtractor {
+    - conn: connection
+    --
+    + extract_features(machine_id, start_date, end_date): DataFrame
+    + load_historical_data(machine_id, start_date, end_date): tuple
+    + calculate_rolling_stats(df, windows): dict
+    + calculate_trends(df, window): dict
+    + calculate_volatility(df): dict
+    + extract_smart_features(smart_df): dict
+    - handle_missing_data(df): DataFrame
+  }
+  
+  class ModelRegistry {
+    - conn: connection
+    - model_path: string
+    --
+    + save_model(model, model_type, metrics): string
+    + load_model(model_id: string): model
+    + get_active_model(model_type: string): tuple
+    + set_active_model(model_id: string): boolean
+    + list_models(model_type: string): list
+    - get_next_version(model_type: string): int
+  }
+  
+  class AnomalyDetector {
+    - model: IsolationForest
+    - threshold: float
+    --
+    + detect_anomalies(machine_id: int): list
+    + fit(training_data: DataFrame): void
+    + predict(features: DataFrame): array
+    + get_anomaly_score(features: DataFrame): float
+  }
+  
+  class PredictionScheduler {
+    - predictor: Predictor
+    - interval: int
+    --
+    + start(): void
+    + stop(): void
+    + run_predictions(): void
+    - schedule_next_run(): void
+  }
+}
+
+' ============================================
+' MODULE 4: AGENT DE COLLECTE (Python)
+' ============================================
+package "Agent de Collecte (Python)" {
+  
+  class SystemCollector {
+    --
+    + collect_cpu_metrics(): dict
+    + collect_memory_metrics(): dict
+    + collect_disk_metrics(): dict
+    + collect_machine_info(): dict
+    + collect_all(): dict
+    - get_serial_number(): string
+  }
+  
+  class SmartReader {
+    --
+    + read_smart_data(): dict
+    + get_health_status(): string
+    + parse_smart_output(output: string): dict
+    - execute_smartctl(device: string): string
+  }
+  
+  class DataSender {
+    - api_url: string
+    - api_token: string
+    --
+    + send_metrics(data: dict): boolean
+    + send_smart_data(data: dict): boolean
+    + register_machine(info: dict): int
+    - make_request(endpoint, data): response
+  }
+  
+  class CollectionScheduler {
+    - collector: SystemCollector
+    - smart_reader: SmartReader
+    - sender: DataSender
+    - interval: int
+    --
+    + start(): void
+    + stop(): void
+    + run_collection(): void
+  }
+}
+
+' ============================================
+' MODULE 5: SERVICES EXTERNES
+' ============================================
+package "Services Externes" {
+  
+  class ChatbotService {
+    - ollama_url: string
+    --
+    + processQuestion(message: string): json
+    + generateResponse(context: string): string
+    + getSystemContext(): string
+  }
+  
+  class EmailService {
+    - smtp_config: object
+    --
+    + sendAlertEmail(alert: Alert, recipients: list): boolean
+    + sendWelcomeEmail(user: User): boolean
+    - createEmailTemplate(type: string, data: object): string
+  }
+}
+
+' ============================================
+' RELATIONS ENTRE LES CLASSES
+' ============================================
+
+' Relations Database Models
+Machine "1" -- "0..*" SystemMetrics : collecte >
+Machine "1" -- "0..*" SmartData : surveille >
+Machine "1" -- "0..*" Alert : génère >
+Machine "1" -- "0..*" Prediction : prédit >
+
+' Relations Controllers -> Models
+DashboardController ..> Machine : utilise
+DashboardController ..> SystemMetrics : utilise
+DashboardController ..> SmartData : utilise
+DashboardController ..> Prediction : utilise
+
+AlertController ..> Alert : gère
+AlertController ..> Machine : utilise
+
+AuthController ..> User : authentifie
+UserController ..> User : gère
+
+' Relations ML Service
+Predictor ..> FeatureExtractor : utilise
+Predictor ..> ModelRegistry : utilise
+Predictor ..> Prediction : crée
+FeatureExtractor ..> SystemMetrics : lit
+FeatureExtractor ..> SmartData : lit
+ModelRegistry ..> MLModel : gère
+PredictionScheduler ..> Predictor : exécute
+
+AnomalyDetector ..> SystemMetrics : analyse
+AnomalyDetector ..> Alert : crée
+
+' Relations Agent
+CollectionScheduler ..> SystemCollector : utilise
+CollectionScheduler ..> SmartReader : utilise
+CollectionScheduler ..> DataSender : utilise
+DataSender ..> SystemMetrics : envoie
+DataSender ..> SmartData : envoie
+
+' Relations Services
+ChatbotController ..> ChatbotService : utilise
+AlertController ..> EmailService : utilise
+
+@enduml

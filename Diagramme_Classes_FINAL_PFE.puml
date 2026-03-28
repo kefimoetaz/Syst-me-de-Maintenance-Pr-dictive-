@@ -1,0 +1,232 @@
+@startuml
+title Diagramme de Classes - Système de Maintenance Prédictive
+
+' ============================================
+' ENTITÉS MÉTIER PRINCIPALES
+' ============================================
+
+class Machine {
+    - id: String
+    - hostname: String
+    - ipAddress: String
+    - serialNumber: String
+    - model: String
+    - status: MachineStatus
+    - location: String
+    - purchaseDate: Date
+    --
+    + getId(): String
+    + getStatus(): MachineStatus
+}
+
+enum MachineStatus {
+    ACTIVE
+    MAINTENANCE
+    FAILED
+}
+
+class SystemMetrics {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - cpuUsage: float
+    - memoryUsage: float
+    - diskUsage: float
+    - temperature: float
+    --
+    + getCpuUsage(): float
+}
+
+class SmartData {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - diskHealth: int
+    - readErrors: int
+    - writeErrors: int
+    --
+    + getHealthPercentage(): int
+}
+
+class Agent {
+    - machineId: String
+    - version: String
+    - lastHeartbeat: DateTime
+    --
+    + collectData(): void
+    + sendToServer(): boolean
+}
+
+' ============================================
+' PRÉDICTIONS ET ALERTES
+' ============================================
+
+class Prediction {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - probability: float
+    - riskLevel: RiskLevel
+    - estimatedFailureDate: Date
+    --
+    + getProbability(): float
+}
+
+enum RiskLevel {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+class Alert {
+    - id: String
+    - machineId: String
+    - type: AlertType
+    - severity: Severity
+    - title: String
+    - message: String
+    - details: JSON
+    - status: AlertStatus
+    - emailSent: boolean
+    - createdAt: DateTime
+    --
+    + acknowledge(): void
+}
+
+enum AlertType {
+    PREDICTION
+    METRIC
+    SMART
+    ANOMALY
+}
+
+enum Severity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+enum AlertStatus {
+    ACTIVE
+    ACKNOWLEDGED
+    RESOLVED
+    DISMISSED
+}
+
+' ============================================
+' MAINTENANCE
+' ============================================
+
+class MaintenanceIntervention {
+    - id: String
+    - machineId: String
+    - type: InterventionType
+    - description: String
+    - technicianName: String
+    - date: DateTime
+    - cost: float
+    --
+    + getTotalCost(): float
+}
+
+enum InterventionType {
+    CORRECTIVE
+    PREVENTIVE
+}
+
+' ============================================
+' UTILISATEURS
+' ============================================
+
+class User {
+    - id: String
+    - username: String
+    - email: String
+    - role: UserRole
+    --
+    + authenticate(): boolean
+}
+
+enum UserRole {
+    ADMIN
+    TECHNICIAN
+}
+
+' ============================================
+' REPORTING
+' ============================================
+
+class Report {
+    - id: String
+    - title: String
+    - type: ReportType
+    - generatedBy: String
+    - generatedAt: DateTime
+    --
+    + generate(): void
+}
+
+enum ReportType {
+    SYSTEM_HEALTH
+    MAINTENANCE_HISTORY
+}
+
+' ============================================
+' RELATIONS
+' ============================================
+
+' Machine - Relations principales
+Machine "1" -- "0..*" SystemMetrics
+Machine "1" -- "0..*" SmartData
+Machine "1" -- "0..*" Prediction
+Machine "1" -- "0..*" Alert
+Machine "1" -- "0..*" MaintenanceIntervention
+Machine -- MachineStatus
+
+' Agent
+Agent "1" -- "1" Machine
+
+' Prediction
+Prediction -- RiskLevel
+Prediction "1" -- "0..1" Alert
+
+' Alert
+Alert -- AlertType
+Alert -- Severity
+Alert -- AlertStatus
+
+' User
+User -- UserRole
+User "1" -- "0..*" Alert
+User "1" -- "0..*" MaintenanceIntervention
+User "1" -- "0..*" Report
+
+' Maintenance
+MaintenanceIntervention -- InterventionType
+
+' Report
+Report -- ReportType
+
+note right of Machine
+  Entité centrale du système
+  Représente un PC/serveur
+  du parc informatique
+end note
+
+note right of Prediction
+  Résultat de l'analyse IA
+  Stocké en base de données
+  Peut déclencher une alerte
+end note
+
+note bottom of Alert
+  Générée automatiquement quand:
+  - Prédiction HIGH (≥50%)
+  - Prédiction CRITICAL (≥70%)
+  - Anomalie détectée
+  Envoi email automatique
+end note
+
+@enduml

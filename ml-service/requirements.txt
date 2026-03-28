@@ -1,0 +1,22 @@
+# Core ML libraries
+scikit-learn==1.3.2
+pandas==2.1.4
+numpy==1.26.2
+
+# Web framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# Scheduling
+APScheduler==3.10.4
+
+# Testing
+pytest==7.4.3
+hypothesis==6.92.1
+
+# Utilities
+python-dotenv==1.0.0
+joblib==1.3.2

@@ -1,0 +1,91 @@
+@startuml Diagramme_Cas_Utilisation_Visuel
+
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam usecaseBackgroundColor<<user>> LightBlue
+skinparam usecaseBorderColor<<user>> DodgerBlue
+skinparam usecaseBackgroundColor<<system>> LightYellow
+skinparam usecaseBorderColor<<system>> Orange
+
+title Diagramme de Cas d'Utilisation - Maintenance Prédictive\n(Architecture Fonctionnelle)
+
+' Acteurs externes
+actor "Administrateur" as Admin #LightBlue
+actor "Technicien" as Tech #LightGreen
+actor "Agent Python" as Agent #Orange
+actor "Ollama\n(IA)" as Ollama #Purple
+
+' Frontière du système
+rectangle "Plateforme de Maintenance Prédictive" #WhiteSmoke {
+  
+  ' Zone gauche - Interactions utilisateurs (BLEU)
+  package "Interface Utilisateur" #AliceBlue {
+    usecase "S'authentifier" as UC1 <<user>>
+    usecase "Consulter le\ntableau de bord" as UC2 <<user>>
+    usecase "Voir les détails\nd'une machine" as UC3 <<user>>
+    usecase "Consulter\nles alertes" as UC4 <<user>>
+    usecase "Traiter\nune alerte" as UC5 <<user>>
+    usecase "Gérer les\nutilisateurs" as UC6 <<user>>
+    usecase "Interagir avec\nle chatbot" as UC7 <<user>>
+  }
+  
+  ' Zone droite - Processus internes (JAUNE)
+  package "Moteur IA & Analyse" #LemonChiffon {
+    usecase "Analyser les\ndonnées SMART" as UC8 <<system>>
+    usecase "Prédire les pannes\n(LSTM)" as UC9 <<system>>
+    usecase "Détecter les\nanomalies" as UC10 <<system>>
+    usecase "Générer des\nalertes" as UC11 <<system>>
+    usecase "Générer une\nréponse chatbot" as UC12 <<system>>
+  }
+}
+
+' Relations Administrateur
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+
+' Relations Technicien
+Tech --> UC1
+Tech --> UC2
+Tech --> UC3
+Tech --> UC4
+Tech --> UC5
+Tech --> UC7
+
+' Relations Agent Python
+Agent --> UC8 : envoie métriques
+
+' Relations Ollama
+Ollama --> UC12 : fournit réponses
+
+' Relations include/extend entre use cases
+UC2 ..> UC4 : <<include>>
+UC7 ..> UC12 : <<include>>
+UC8 ..> UC9 : <<include>>
+UC9 ..> UC11 : <<extend>>
+UC10 ..> UC11 : <<extend>>
+
+' Notes explicatives
+note right of Agent
+  Collecte automatique
+  toutes les 5 minutes
+  (CPU, RAM, Disque, SMART)
+end note
+
+note right of UC9
+  Modèle LSTM
+  Prédictions: 7j, 14j, 30j
+  Niveaux: LOW, MEDIUM,
+  HIGH, CRITICAL
+end note
+
+note left of Ollama
+  Service IA externe
+  pour le chatbot
+end note
+
+@enduml

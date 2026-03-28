@@ -1,0 +1,9 @@
+{
+  "api_url": "http://localhost:3000/api/data",
+  "token": "your_agent_token_here",
+  "agent_id": "00000000-0000-0000-0000-000000000000",
+  "collection_interval_hours": 1,
+  "log_file": "agent.log",
+  "log_level": "INFO",
+  "max_log_size_mb": 10
+}

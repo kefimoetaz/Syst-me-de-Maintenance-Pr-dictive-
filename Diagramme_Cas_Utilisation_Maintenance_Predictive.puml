@@ -1,0 +1,131 @@
+@startuml
+left to right direction
+
+header
+<b>Système de Maintenance Prédictive</b>
+PC Technician Assistant - Version Étendue
+end header
+
+' --- Acteurs ---
+actor "Technicien IT" as tech
+actor "Administrateur Système" as admin
+actor "Agent de Collecte\n(Système)" as agent
+
+rectangle "Système de Maintenance Prédictive" {
+    
+    ' --- Package Collecte de Données ---
+    package "Collecte de Données" {
+        usecase "UC1: Surveiller les métriques système\n(CPU, RAM, Disque)" as UC1
+        usecase "UC2: Collecter les données SMART\n(Santé disque dur)" as UC2
+        usecase "UC3: Envoyer les données au serveur\n(API REST)" as UC3
+        usecase "UC4: Authentifier les agents\n(Token/API Key)" as UC4
+    }
+    
+    ' --- Package Gestion des Données ---
+    package "Gestion des Données" {
+        usecase "UC5: Stocker les données historiques\n(Base de données)" as UC5
+        usecase "UC10: Consulter l'historique\n(Métriques passées)" as UC10
+    }
+    
+    ' --- Package Intelligence Artificielle ---
+    package "Intelligence Artificielle" {
+        usecase "UC6: Analyser les tendances\n(Feature engineering)" as UC6
+        usecase "UC7: Prédire les pannes\n(Modèle ML)" as UC7
+        usecase "UC8: Générer des alertes\n(Notifications)" as UC8
+        usecase "UC15: Mettre à jour le modèle IA\n(Réentraînement)" as UC15
+        usecase "UC19: Entraîner le modèle IA\n(Apprentissage initial)" as UC19
+    }
+    
+    ' --- Package Visualisation ---
+    package "Visualisation et Reporting" {
+        usecase "UC9: Visualiser le dashboard\n(Vue d'ensemble)" as UC9
+        usecase "UC11: Exporter les rapports\n(PDF, Excel)" as UC11
+        usecase "UC17: Visualiser les recommandations\n(Actions suggérées)" as UC17
+        usecase "UC21: Consulter l'historique des pannes\n(Interventions passées)" as UC21
+    }
+    
+    ' --- Package Administration ---
+    package "Administration" {
+        usecase "UC12: Configurer les seuils d'alerte\n(Paramètres)" as UC12
+        usecase "UC13: Gérer les utilisateurs\n(Rôles et permissions)" as UC13
+        usecase "UC14: Déployer les agents\n(Installation sur PC)" as UC14
+    }
+    
+    ' --- Package Actions ---
+    package "Actions et Interventions" {
+        usecase "UC18: Accuser réception d'alerte\n(Confirmation)" as UC18
+        usecase "UC20: Gérer les interventions\n(Maintenance corrective)" as UC20
+        usecase "UC16: Simuler des scénarios de panne\n(Tests)" as UC16
+    }
+}
+
+' --- Relations Acteurs → Use Cases ---
+
+' Agent de Collecte (Système automatique)
+agent --> UC1
+agent --> UC2
+agent --> UC3
+
+' Technicien IT
+tech --> UC9
+tech --> UC10
+tech --> UC11
+tech --> UC17
+tech --> UC18
+tech --> UC20
+tech --> UC21
+
+' Administrateur Système
+admin --> UC12
+admin --> UC13
+admin --> UC14
+admin --> UC15
+admin --> UC19
+admin --> UC16
+
+' --- Relations <<include>> (Dépendances obligatoires) ---
+
+' Collecte de données
+UC3 ..> UC4 : <<include>>
+UC3 ..> UC5 : <<include>>
+
+' Intelligence Artificielle
+UC7 ..> UC6 : <<include>>
+UC8 ..> UC7 : <<include>>
+
+' Visualisation
+UC9 ..> UC5 : <<include>>
+UC17 ..> UC7 : <<include>>
+
+' --- Relations <<extend>> (Extensions optionnelles) ---
+
+' Reporting étendu
+UC11 ..> UC10 : <<extend>>
+UC11 ..> UC21 : <<extend>>
+
+' Fonctionnalités avancées
+UC16 ..> UC7 : <<extend>>
+UC18 ..> UC8 : <<extend>>
+UC20 ..> UC8 : <<extend>>
+
+' Mise à jour du modèle
+UC15 ..> UC19 : <<extend>>
+
+note right of agent
+  L'agent s'exécute automatiquement
+  sur chaque PC toutes les heures
+  et collecte les données système
+end note
+
+note right of UC7
+  Le modèle ML utilise les données
+  historiques pour prédire les pannes
+  avec un score de probabilité
+end note
+
+note right of UC8
+  Les alertes sont générées quand
+  la probabilité de panne > 70%
+end note
+
+@enduml

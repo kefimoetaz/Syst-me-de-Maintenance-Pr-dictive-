@@ -1,0 +1,196 @@
+@startuml Sequence_1_Collecte_Donnees
+title Séquence 1 : Collecte Automatique des Données
+
+participant "Agent\n(Système)" as Agent
+participant "API" as API
+database "DB" as DB
+
+Agent -> Agent : Timer (1h)
+activate Agent
+
+Agent -> Agent : Collecter métriques\n(CPU, RAM, disque, température)
+
+Agent -> Agent : Collecter données SMART\n(santé disque)
+
+Agent -> API : POST /api/data\n{metrics, smartData}
+activate API
+
+API -> DB : Sauvegarder
+activate DB
+DB --> API : OK
+deactivate DB
+
+API --> Agent : 200 OK
+deactivate API
+
+deactivate Agent
+
+note right of Agent
+  Agent = Programme automatique
+  Collecte toutes les heures
+end note
+
+@enduml
+
+@startuml Sequence_2_Prediction_Alerte
+title Séquence 2 : Prédiction et Génération d'Alerte
+
+participant "Scheduler" as Cron
+participant "Service IA" as IA
+database "DB" as DB
+actor "Technicien" as Tech
+
+Cron -> IA : Analyse quotidienne (2h00)
+activate IA
+
+IA -> DB : Récupérer données\n(30 derniers jours)
+activate DB
+DB --> IA : Métriques + SMART
+deactivate DB
+
+loop Pour chaque machine
+
+    IA -> IA : Analyser avec modèle ML
+    
+    IA -> IA : Calculer probabilité\nde panne
+    
+    IA -> DB : Sauvegarder prédiction
+    activate DB
+    DB --> IA : OK
+    deactivate DB
+    
+    alt Probabilité ≥ 50% (HIGH) ou ≥ 70% (CRITICAL)
+        
+        IA -> API : POST /api/alerts\n{type, severity, message}
+        activate API
+        
+        API -> DB : Créer alerte
+        activate DB
+        DB --> API : Alerte créée
+        deactivate DB
+        
+        API -> Tech : Email automatique
+        activate Tech
+        Tech --> API : Reçu
+        deactivate Tech
+        
+        API --> IA : 201 Created
+        deactivate API
+        
+    end
+    
+end
+
+deactivate IA
+
+note right of IA
+  Modèle ML : Random Forest
+  Seuils d'alerte :
+  - HIGH : ≥ 50%
+  - CRITICAL : ≥ 70%
+  Email envoyé automatiquement
+end note
+
+@enduml
+
+@startuml Sequence_3_Traitement_Alerte
+title Séquence 3 : Traitement d'une Alerte
+
+actor "Technicien" as Tech
+participant "WebApp" as Web
+participant "API" as API
+database "DB" as DB
+
+== Consultation ==
+
+Tech -> Web : Consulter alerte
+activate Web
+
+Web -> API : GET /api/alerts/{id}
+activate API
+
+API -> DB : Récupérer alerte
+activate DB
+DB --> API : Détails
+deactivate DB
+
+API --> Web : Données
+deactivate API
+
+Web --> Tech : Affichage
+deactivate Web
+
+== Accusé Réception ==
+
+Tech -> Web : Accuser réception
+activate Web
+
+Web -> API : PATCH /api/alerts/{id}/acknowledge
+activate API
+
+API -> DB : UPDATE status='ACKNOWLEDGED'
+activate DB
+DB --> API : OK
+deactivate DB
+
+API --> Web : Confirmé
+deactivate API
+
+Web --> Tech : Alerte accusée
+deactivate Web
+
+== Intervention ==
+
+Tech -> Web : Créer intervention
+activate Web
+
+Web -> API : POST /api/interventions
+activate API
+
+API -> DB : INSERT intervention
+activate DB
+DB --> API : ID créé
+deactivate DB
+
+API -> DB : UPDATE alert status='IN_PROGRESS'
+activate DB
+DB --> API : OK
+deactivate DB
+
+API --> Web : Intervention créée
+deactivate API
+
+Web --> Tech : Confirmé
+deactivate Web
+
+== Résolution ==
+
+Tech -> Web : Résoudre
+activate Web
+
+Web -> API : PUT /api/interventions/{id}/resolve
+activate API
+
+API -> DB : UPDATE intervention='COMPLETED'
+activate DB
+DB --> API : OK
+deactivate DB
+
+API -> DB : UPDATE alert='RESOLVED'
+activate DB
+DB --> API : OK
+deactivate DB
+
+API --> Web : Résolu
+deactivate API
+
+Web --> Tech : Terminé
+deactivate Web
+
+note right of Tech
+  ✅ Implémenté : Consultation + Accusé
+  🔜 Future : Intervention + Résolution
+  (MaintenanceIntervention)
+end note
+
+@enduml

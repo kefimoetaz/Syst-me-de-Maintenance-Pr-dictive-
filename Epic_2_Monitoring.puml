@@ -1,0 +1,19 @@
+@startuml Epic_2_Monitoring
+
+title EPIC 2 — Monitoring
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "🔵 EPIC 2 — Monitoring" #LightBlue {
+  usecase "US3: Voir la liste\ndes machines" as US3
+  usecase "US4: Voir les métriques\nsystème (CPU, RAM, Disque)" as US4
+  usecase "US5: Voir les détails\nd'une machine" as US5
+  usecase "US6: Voir les données\nSMART du disque" as US6
+}
+
+US3 ..> US5 : <<include>>
+US5 ..> US4 : <<include>>
+US5 ..> US6 : <<include>>
+
+@enduml

@@ -1,0 +1,110 @@
+@startuml Product_Backlog_Maintenance_Predictive
+
+title Product Backlog - Maintenance Prédictive\nPlateforme de Surveillance et Prédiction de Pannes
+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+
+' ============================================
+' EPIC 1 - AUTHENTIFICATION
+' ============================================
+
+package "🟢 EPIC 1 — Authentification" #LightGreen {
+  usecase "US1: Se connecter\nau système" as US1
+  usecase "US2: Voir mon profil\nutilisateur" as US2
+  
+  note right of US1
+    Critères d'acceptation:
+    - Email + mot de passe
+    - JWT token généré
+    - Redirection vers dashboard
+  end note
+}
+
+' ============================================
+' EPIC 2 - MONITORING
+' ============================================
+
+package "🔵 EPIC 2 — Monitoring" #LightBlue {
+  usecase "US3: Voir la liste\ndes machines" as US3
+  usecase "US4: Voir les métriques\nsystème (CPU, RAM, Disque)" as US4
+  usecase "US5: Voir les détails\nd'une machine" as US5
+  usecase "US6: Voir les données\nSMART du disque" as US6
+  
+  note right of US4
+    Métriques collectées:
+    - CPU usage (%)
+    - Memory usage (%)
+    - Disk usage (%)
+    - Température
+  end note
+}
+
+' ============================================
+' EPIC 3 - IA / PRÉDICTION
+' ============================================
+
+package "🟣 EPIC 3 — IA / Prédiction" #Lavender {
+  usecase "US7: Générer une prédiction\nde panne (LSTM)" as US7
+  usecase "US8: Voir le niveau\nde risque (7j/14j/30j)" as US8
+  usecase "US9: Voir les facteurs\ncontribuant au risque" as US9
+  
+  note right of US7
+    Modèle LSTM:
+    - Probabilités: 7j, 14j, 30j
+    - Niveaux: LOW, MEDIUM, HIGH, CRITICAL
+    - Basé sur 30 jours d'historique
+  end note
+}
+
+' ============================================
+' EPIC 4 - ALERTES
+' ============================================
+
+package "🔴 EPIC 4 — Alertes" #LightCoral {
+  usecase "US10: Recevoir une alerte\nautomatique (HIGH/CRITICAL)" as US10
+  usecase "US11: Consulter la liste\ndes alertes" as US11
+  usecase "US12: Acquitter\nune alerte" as US12
+  usecase "US13: Résoudre\nune alerte" as US13
+  
+  note right of US10
+    Alertes générées si:
+    - Risque ≥ 50% (HIGH)
+    - Risque ≥ 70% (CRITICAL)
+  end note
+}
+
+' ============================================
+' EPIC 5 - ADMINISTRATION
+' ============================================
+
+package "🟡 EPIC 5 — Administration" #LightYellow {
+  usecase "US14: Gérer les utilisateurs\n(créer, modifier, supprimer)" as US14
+  usecase "US15: Attribuer des rôles\n(Admin, Technicien)" as US15
+  
+  note right of US14
+    Rôles:
+    - Admin: accès complet
+    - Technicien: lecture + alertes
+  end note
+}
+
+' ============================================
+' RELATIONS ENTRE USER STORIES
+' ============================================
+
+US1 ..> US3 : <<prerequisite>>
+US3 ..> US5 : <<include>>
+US5 ..> US4 : <<include>>
+US5 ..> US6 : <<include>>
+
+US7 ..> US8 : <<include>>
+US8 ..> US9 : <<include>>
+US7 ..> US10 : <<trigger>>
+
+US10 ..> US11 : <<include>>
+US11 ..> US12 : <<extend>>
+US12 ..> US13 : <<extend>>
+
+@enduml

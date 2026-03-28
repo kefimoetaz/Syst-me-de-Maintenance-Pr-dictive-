@@ -1,0 +1,15 @@
+@startuml Epic_5_Administration
+
+title EPIC 5 — Administration
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "🟡 EPIC 5 — Administration" #LightYellow {
+  usecase "US14: Gérer les utilisateurs\n(créer, modifier, supprimer)" as US14
+  usecase "US15: Attribuer des rôles\n(Admin, Technicien)" as US15
+}
+
+US14 ..> US15 : <<include>>
+
+@enduml

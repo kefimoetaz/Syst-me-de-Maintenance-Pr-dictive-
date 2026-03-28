@@ -1,0 +1,197 @@
+@startuml Diagrammes_Sequence_Maintenance_Predictive
+
+title Diagrammes de Séquence - Maintenance Prédictive\nDu Monitoring à la Visualisation des Alertes
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam shadowing false
+
+' ============================================
+' SCÉNARIO 1: COLLECTE ET STOCKAGE DES DONNÉES
+' ============================================
+
+participant "Agent Python\n(Machine)" as Agent
+participant "Backend API\n(Node.js)" as Backend
+participant "Base de Données\n(PostgreSQL)" as DB
+
+== Collecte des Métriques (toutes les 5 minutes) ==
+
+Agent -> Agent: collect_cpu_metrics()
+activate Agent
+Agent -> Agent: collect_memory_metrics()
+Agent -> Agent: collect_disk_metrics()
+Agent -> Agent: collect_smart_data()
+note right: psutil + smartmontools
+deactivate Agent
+
+Agent -> Backend: POST /api/data\n{machine, system_metrics, smart_data}
+activate Backend
+
+Backend -> Backend: Valider les données
+Backend -> DB: findOrCreate(Machine)
+activate DB
+DB --> Backend: Machine record
+deactivate DB
+
+Backend -> DB: INSERT system_metrics
+activate DB
+DB --> Backend: system_metrics_id
+deactivate DB
+
+Backend -> DB: INSERT smart_data
+activate DB
+DB --> Backend: smart_data_id
+deactivate DB
+
+Backend --> Agent: 201 Created\n{machine_id, metrics_id}
+deactivate Backend
+
+
+' ============================================
+' SCÉNARIO 2: PRÉDICTION ML ET GÉNÉRATION D'ALERTES
+' ============================================
+
+participant "ML Service\n(Flask)" as ML
+participant "Modèle LSTM" as Model
+
+== Prédiction Automatique (toutes les heures) ==
+
+ML -> ML: Scheduler déclenche\npredict_batch()
+activate ML
+
+ML -> DB: SELECT machines
+activate DB
+DB --> ML: Liste des machines
+deactivate DB
+
+loop Pour chaque machine
+
+    ML -> ML: extract_features(machine_id)
+    activate ML #LightBlue
+    
+    ML -> DB: SELECT system_metrics\nWHERE machine_id AND date > now() - 30 days
+    activate DB
+    DB --> ML: Métriques historiques
+    deactivate DB
+    
+    ML -> DB: SELECT smart_data\nWHERE machine_id AND date > now() - 30 days
+    activate DB
+    DB --> ML: Données SMART
+    deactivate DB
+    
+    ML -> ML: Calculer statistiques\n(moyennes, tendances, écarts-types)
+    deactivate ML
+    
+    ML -> Model: predict_proba(features)
+    activate Model
+    Model --> ML: Probabilités de panne\n(7j, 14j, 30j)
+    deactivate Model
+    
+    ML -> ML: calculate_risk_level(probability)
+    note right: CRITICAL ≥70%\nHIGH ≥50%\nMEDIUM ≥30%\nLOW <30%
+    
+    ML -> DB: INSERT INTO predictions\n(machine_id, probabilities, risk_level)
+    activate DB
+    DB --> ML: prediction_id
+    deactivate DB
+    
+    alt Risque HIGH ou CRITICAL
+        ML -> Backend: POST /api/alerts\n{machine_id, severity, message}
+        activate Backend
+        Backend -> DB: INSERT INTO alerts
+        activate DB
+        DB --> Backend: alert_id
+        deactivate DB
+        Backend --> ML: 201 Created
+        deactivate Backend
+    end
+
+end
+
+deactivate ML
+
+
+' ============================================
+' SCÉNARIO 3: VISUALISATION DANS LE DASHBOARD
+' ============================================
+
+participant "Frontend\n(React)" as Frontend
+participant "Utilisateur" as User
+
+== Consultation du Tableau de Bord ==
+
+User -> Frontend: Accède au dashboard
+activate Frontend
+
+Frontend -> Backend: GET /api/dashboard/overview
+activate Backend
+
+Backend -> DB: SELECT COUNT(*) FROM machines
+activate DB
+DB --> Backend: total_machines
+deactivate DB
+
+Backend -> DB: SELECT COUNT(*) FROM alerts\nWHERE status = 'OPEN'
+activate DB
+DB --> Backend: active_alerts
+deactivate DB
+
+Backend -> DB: SELECT AVG(cpu_usage), AVG(memory_usage)\nFROM system_metrics\nWHERE timestamp > now() - 24h
+activate DB
+DB --> Backend: avg_metrics
+deactivate DB
+
+Backend -> DB: SELECT * FROM predictions\nORDER BY prediction_date DESC\nLIMIT 10
+activate DB
+DB --> Backend: recent_predictions
+deactivate DB
+
+Backend --> Frontend: 200 OK\n{kpis, machines, alerts, predictions}
+deactivate Backend
+
+Frontend -> Frontend: Afficher KPIs
+Frontend -> Frontend: Afficher graphiques
+Frontend -> Frontend: Afficher liste alertes
+
+Frontend --> User: Dashboard affiché
+deactivate Frontend
+
+
+' ============================================
+' SCÉNARIO 4: TRAITEMENT D'UNE ALERTE
+' ============================================
+
+== Gestion d'une Alerte ==
+
+User -> Frontend: Clique sur une alerte
+activate Frontend
+
+Frontend -> Backend: GET /api/alerts/:id
+activate Backend
+Backend -> DB: SELECT * FROM alerts WHERE id = :id
+activate DB
+DB --> Backend: Alert details
+deactivate DB
+Backend --> Frontend: 200 OK {alert}
+deactivate Backend
+
+Frontend --> User: Affiche détails alerte
+deactivate Frontend
+
+User -> Frontend: Acquitte l'alerte
+activate Frontend
+
+Frontend -> Backend: PUT /api/alerts/:id/acknowledge
+activate Backend
+Backend -> DB: UPDATE alerts\nSET status = 'ACKNOWLEDGED',\nacknowledged_by = user_id,\nacknowledged_at = now()
+activate DB
+DB --> Backend: Updated
+deactivate DB
+Backend --> Frontend: 200 OK
+deactivate Backend
+
+Frontend -> Frontend: Mettre à jour l'affichage
+Frontend --> User: Alerte acquittée
+deactivate Frontend
+
+@enduml

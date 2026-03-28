@@ -1,0 +1,99 @@
+@startwbs
+title Backlog Projet - Système de Maintenance Prédictive
+
+* Projet PFE\nMaintenance Prédictive
+** Sprint 0\nInitialisation\n(2 semaines)
+*** US0.1: Configuration\nenvironnement dev
+**** Installer Python/Node.js
+**** Configurer base de données
+**** Setup Git repository
+*** US0.2: Architecture\nde base
+**** Créer structure projet
+**** Définir API REST
+**** Setup Docker
+
+** Sprint 1\nCollecte de Données\n(3 semaines)
+*** US1.1: Développer\nl'agent de collecte
+**** Collecter métriques CPU/RAM
+**** Collecter données SMART
+**** Timer automatique (1h)
+*** US1.2: API de\nréception données
+**** Endpoint POST /api/data
+**** Validation des données
+**** Stockage en base
+*** US1.3: Base de\ndonnées
+**** Tables: Machine, SystemMetrics
+**** Tables: SmartData, Agent
+**** Indexes et relations
+
+** Sprint 2\nIntelligence Artificielle\n(4 semaines)
+*** US2.1: Préparation\ndes données
+**** Feature engineering
+**** Nettoyage données
+**** Labellisation
+*** US2.2: Entraînement\nmodèle ML
+**** Choix algorithme (Random Forest)
+**** Entraînement sur données historiques
+**** Validation (accuracy > 85%)
+*** US2.3: Service de\nprédiction
+**** API prédiction
+**** Calcul probabilité panne
+**** Sauvegarde prédictions
+
+** Sprint 3\nAlertes et Notifications\n(2 semaines)
+*** US3.1: Système\nd'alertes
+**** Génération alertes (seuil 70%)
+**** Niveaux de risque
+**** Statuts alertes
+*** US3.2: Service de\nnotification
+**** Envoi email
+**** Envoi SMS
+**** Push notifications
+*** US3.3: Détection\nd'anomalies
+**** Analyse statistique
+**** Détection temps réel
+**** Types d'anomalies
+
+** Sprint 4\nInterface Web\n(3 semaines)
+*** US4.1: Dashboard\nprincipal
+**** Vue d'ensemble parc
+**** Graphiques temps réel
+**** KPIs principaux
+*** US4.2: Gestion des\nalertes
+**** Liste des alertes
+**** Détails alerte
+**** Accusé réception
+*** US4.3: Historique\nmachines
+**** Visualisation métriques
+**** Historique prédictions
+**** Historique interventions
+
+** Sprint 5\nMaintenance et Admin\n(2 semaines)
+*** US5.1: Gestion\ninterventions
+**** Créer intervention
+**** Suivi interventions
+**** Clôture intervention
+*** US5.2: Module\nadministration
+**** Gestion utilisateurs
+**** Configuration seuils
+**** Déploiement agents
+*** US5.3: Reporting
+**** Export PDF
+**** Export Excel
+**** Rapports personnalisés
+
+** Sprint 6\nTests et Déploiement\n(2 semaines)
+*** US6.1: Tests\nunitaires
+**** Tests backend
+**** Tests frontend
+**** Couverture > 80%
+*** US6.2: Tests\nd'intégration
+**** Tests end-to-end
+**** Tests API
+**** Tests ML
+*** US6.3: Déploiement\nproduction
+**** Configuration serveur
+**** Migration données
+**** Documentation
+
+@endwbs

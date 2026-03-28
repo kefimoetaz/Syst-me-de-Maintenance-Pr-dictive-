@@ -1,0 +1,19 @@
+@startuml Epic_4_Alertes
+
+title EPIC 4 — Alertes
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "🔴 EPIC 4 — Alertes" #LightCoral {
+  usecase "US10: Recevoir une alerte\nautomatique (HIGH/CRITICAL)" as US10
+  usecase "US11: Consulter la liste\ndes alertes" as US11
+  usecase "US12: Acquitter\nune alerte" as US12
+  usecase "US13: Résoudre\nune alerte" as US13
+}
+
+US10 ..> US11 : <<include>>
+US11 ..> US12 : <<extend>>
+US12 ..> US13 : <<extend>>
+
+@enduml

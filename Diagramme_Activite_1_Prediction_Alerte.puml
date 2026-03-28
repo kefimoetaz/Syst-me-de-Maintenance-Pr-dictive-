@@ -1,0 +1,62 @@
+@startuml
+title Diagramme d'Activité 1 : Processus de Prédiction et Génération d'Alerte
+
+|Scheduler|
+start
+:Déclencher analyse quotidienne\n(2h00 du matin);
+
+|Service IA|
+:Récupérer la liste\ndes machines actives;
+
+repeat
+  :Sélectionner machine suivante;
+  
+  |Base de Données|
+  :Récupérer données historiques\n(30 derniers jours);
+  note right
+    - Métriques système
+    - Données SMART
+    - Historique pannes
+  end note
+  
+  |Service IA|
+  :Préparer les features\npour le modèle ML;
+  
+  :Exécuter le modèle\nde prédiction;
+  
+  :Calculer probabilité\nde panne;
+  
+  |Base de Données|
+  :Sauvegarder la prédiction;
+  
+  |Service IA|
+  if (Probabilité > 70% ?) then (oui)
+    :Déterminer niveau\nde risque;
+    note right
+      - HIGH: 70-85%
+      - CRITICAL: > 85%
+    end note
+    
+    |Base de Données|
+    :Créer une alerte;
+    
+    |Service Notification|
+    :Envoyer notification\nau technicien;
+    note right
+      - Email
+      - SMS
+      - Push notification
+    end note
+  else (non)
+    :Aucune action;
+  endif
+  
+repeat while (Autres machines ?) is (oui)
+->non;
+
+|Service IA|
+:Générer rapport\nd'analyse quotidien;
+
+stop
+
+@enduml

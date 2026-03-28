@@ -1,0 +1,153 @@
+@startuml Diagramme_Classes_Maintenance_Predictive
+
+title Diagramme de Classes - Maintenance Prédictive
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' ============================================
+' ENTITÉS PRINCIPALES
+' ============================================
+
+class Machine {
+  - id: entier
+  - nom_hote: chaine
+  - adresse_ip: chaine
+  - numero_serie: chaine
+  - systeme_exploitation: chaine
+  - date_creation: datetime
+  --
+  + obtenirTout(): Machine[]
+  + creer(donnees): Machine
+}
+
+class Utilisateur {
+  - id: entier
+  - email: chaine
+  - mot_de_passe_hash: chaine
+  - nom_complet: chaine
+  - role: enum
+  - est_actif: booleen
+  --
+  + authentifier(email, mdp): booleen
+  + mettreAJourProfil(donnees): void
+}
+
+class MetriquesSysteme {
+  - id: entier
+  - id_machine: entier
+  - horodatage: datetime
+  - usage_cpu: decimal
+  - usage_memoire: decimal
+  - usage_disque: decimal
+  --
+  + trouverParMachine(idMachine): MetriquesSysteme[]
+}
+
+class DonneesSMART {
+  - id: entier
+  - id_machine: entier
+  - horodatage: datetime
+  - etat_sante: enum
+  - erreurs_lecture: entier
+  - erreurs_ecriture: entier
+  - temperature: decimal
+  --
+  + trouverParMachine(idMachine): DonneesSMART[]
+}
+
+class Prediction {
+  - id: entier
+  - id_machine: entier
+  - date_prediction: datetime
+  - probabilite_panne_7j: decimal
+  - probabilite_panne_14j: decimal
+  - probabilite_panne_30j: decimal
+  - niveau_risque: enum
+  --
+  + obtenirDerniere(idMachine): Prediction
+}
+
+class Alerte {
+  - id: entier
+  - id_machine: entier
+  - type_alerte: enum
+  - severite: enum
+  - titre: chaine
+  - message: texte
+  - statut: enum
+  - acquittee_par: entier
+  --
+  + creerAlerte(donnees): Alerte
+  + acquitter(idUtilisateur): void
+  + resoudre(): void
+}
+
+' ============================================
+' SERVICES MÉTIER
+' ============================================
+
+class Predicteur {
+  - cache_modele: dict
+  --
+  + predireUnique(idMachine): dict
+  + predireLot(idsMachines): liste
+  + calculerNiveauRisque(probabilite): chaine
+}
+
+class ExtracteurCaracteristiques {
+  --
+  + extraireCaracteristiques(idMachine, dateDebut, dateFin): DataFrame
+  + calculerStatistiquesGlissantes(df, fenetres): dict
+  + calculerTendances(df): dict
+}
+
+class CollecteurSysteme {
+  --
+  + collecterMetriquesCPU(): dict
+  + collecterMetriquesMemoire(): dict
+  + collecterMetriquesDisque(): dict
+  + collecterTout(): dict
+}
+
+class ControleurTableauBord {
+  --
+  + obtenirVueEnsemble(req, res): json
+  + obtenirMachines(req, res): json
+  + obtenirMetriquesMachine(req, res): json
+}
+
+class ControleurAuthentification {
+  --
+  + connexion(req, res): json
+  + inscription(req, res): json
+  + obtenirProfil(req, res): json
+}
+
+' ============================================
+' RELATIONS
+' ============================================
+
+Machine "1" -- "0..*" MetriquesSysteme : collecte >
+Machine "1" -- "0..*" DonneesSMART : surveille >
+Machine "1" -- "0..*" Prediction : prédit >
+Machine "1" -- "0..*" Alerte : génère >
+
+Utilisateur "1" -- "0..*" Alerte : traite >
+
+Predicteur ..> ExtracteurCaracteristiques : utilise
+Predicteur ..> Prediction : crée
+
+ExtracteurCaracteristiques ..> MetriquesSysteme : lit
+ExtracteurCaracteristiques ..> DonneesSMART : lit
+
+CollecteurSysteme ..> MetriquesSysteme : envoie
+CollecteurSysteme ..> DonneesSMART : envoie
+
+ControleurTableauBord ..> Machine : utilise
+ControleurTableauBord ..> Prediction : utilise
+ControleurTableauBord ..> Alerte : utilise
+
+ControleurAuthentification ..> Utilisateur : gère
+
+@enduml

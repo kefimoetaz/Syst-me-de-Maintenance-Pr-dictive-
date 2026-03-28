@@ -1,0 +1,62 @@
+@startuml Diagramme_Cas_Utilisation_Maintenance_Predictive
+
+skinparam actorStyle awesome
+skinparam shadowing false
+
+title Diagramme de Cas d'Utilisation - Maintenance Prédictive
+
+' Acteurs
+actor "Administrateur" as Admin
+actor "Technicien" as Tech
+actor "Agent Python" as Agent
+
+' Frontière du système
+rectangle "Plateforme de Maintenance Prédictive" {
+  
+  usecase "S'authentifier" as UC1
+  usecase "Consulter le\ntableau de bord" as UC2
+  usecase "Voir les détails\nd'une machine" as UC3
+  usecase "Consulter les alertes" as UC4
+  usecase "Gérer les alertes" as UC5
+  usecase "Gérer les utilisateurs" as UC6
+  usecase "Interagir avec\nle chatbot" as UC7
+  usecase "Envoyer les métriques\nsystème" as UC8
+
+}
+
+' Relations Administrateur
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+
+' Relations Technicien
+Tech --> UC1
+Tech --> UC2
+Tech --> UC3
+Tech --> UC4
+Tech --> UC5
+Tech --> UC7
+
+' Relations Agent Python
+Agent --> UC8
+
+' Relations include/extend
+UC2 ..> UC4 : <<include>>
+UC5 ..> UC4 : <<extend>>
+
+' Notes
+note right of UC8
+  Collecte automatique
+  toutes les 5 minutes
+end note
+
+note bottom of UC7
+  Assistant IA pour
+  interroger le système
+end note
+
+@enduml

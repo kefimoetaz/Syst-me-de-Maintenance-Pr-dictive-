@@ -1,0 +1,60 @@
+@startuml Epic_1_Authentification
+
+title EPIC 1 — Authentification et Gestion de Session
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Administrateur" as Admin
+actor "Technicien" as Tech
+
+package "EPIC 1 — Authentification" #LightGreen {
+  
+  usecase "US1.1: Authentification\npar email et mot de passe" as US1_1
+  usecase "US1.2: Génération et\nvalidation JWT token" as US1_2
+  usecase "US1.3: Gestion de session\nsécurisée" as US1_3
+  
+  usecase "US2.1: Consulter profil\nutilisateur" as US2_1
+  usecase "US2.2: Modifier informations\npersonnelles" as US2_2
+  usecase "US2.3: Changer mot de passe" as US2_3
+}
+
+Admin --> US1_1
+Tech --> US1_1
+
+US1_1 ..> US1_2 : <<include>>
+US1_2 ..> US1_3 : <<include>>
+
+Admin --> US2_1
+Tech --> US2_1
+
+US2_1 ..> US2_2 : <<extend>>
+US2_1 ..> US2_3 : <<extend>>
+
+note right of US1_1
+  Critères d'acceptation:
+  - Validation email format
+  - Hash bcrypt (10 rounds)
+  - Blocage après 5 tentatives
+  - Redirection selon rôle
+end note
+
+note right of US1_2
+  Spécifications techniques:
+  - JWT avec expiration 24h
+  - Payload: user_id, email, role
+  - Algorithme: HS256
+  - Refresh token optionnel
+end note
+
+note right of US2_1
+  Données affichées:
+  - Nom complet
+  - Email
+  - Rôle (Admin/Technicien)
+  - Date de création
+  - Dernière connexion
+end note
+
+@enduml

@@ -1,0 +1,744 @@
+@startuml Sequence_1_Collecte_Donnees
+title Séquence 1 : Collecte et Envoi des Données Système
+
+actor "Agent\n(Système)" as Agent
+participant "Machine" as Machine
+participant "SystemMetrics" as Metrics
+participant "SmartData" as Smart
+participant "API Server" as API
+participant "AuthService" as Auth
+database "Database" as DB
+
+== Collecte Périodique (Toutes les heures) ==
+
+Agent -> Agent : Timer déclenché
+activate Agent
+
+Agent -> Machine : collectSystemInfo()
+activate Machine
+Machine --> Agent : machineInfo
+deactivate Machine
+
+Agent -> Metrics : new SystemMetrics()
+activate Metrics
+Agent -> Metrics : setCpuUsage()
+Agent -> Metrics : setMemoryUsage()
+Agent -> Metrics : setDiskUsage()
+Agent -> Metrics : setTemperature()
+Agent -> Metrics : setTimestamp()
+Metrics --> Agent : metricsObject
+deactivate Metrics
+
+Agent -> Smart : new SmartData()
+activate Smart
+Agent -> Smart : readSmartAttributes()
+Smart -> Machine : getDiskSmartData()
+activate Machine
+Machine --> Smart : smartAttributes
+deactivate Machine
+Smart --> Agent : smartDataObject
+deactivate Smart
+
+== Authentification ==
+
+Agent -> API : POST /api/auth/token
+activate API
+API -> Auth : validateAgent(agentId, apiKey)
+activate Auth
+Auth -> DB : checkAgentCredentials()
+activate DB
+DB --> Auth : credentials
+deactivate DB
+Auth --> API : token
+deactivate Auth
+API --> Agent : authToken
+deactivate API
+
+== Envoi des Données ==
+
+Agent -> API : POST /api/data\n{metrics, smartData, token}
+activate API
+
+API -> Auth : validateToken(token)
+activate Auth
+Auth --> API : valid
+deactivate Auth
+
+API -> DB : INSERT INTO system_metrics
+activate DB
+DB --> API : success
+deactivate DB
+
+API -> DB : INSERT INTO smart_data
+activate DB
+DB --> API : success
+deactivate DB
+
+API --> Agent : 200 OK
+deactivate API
+
+Agent -> Agent : logSuccess()
+deactivate Agent
+
+note right of Agent
+  L'agent collecte les données
+  toutes les heures et les envoie
+  automatiquement au serveur
+end note
+
+@enduml
+
+@startuml Sequence_2_Prediction_Panne
+title Séquence 2 : Prédiction de Panne et Génération d'Alerte
+
+actor "Scheduler\n(Cron Job)" as Cron
+participant "PredictionService" as PredService
+participant "PredictionModel" as Model
+database "Database" as DB
+participant "FeatureEngine" as Feature
+participant "Prediction" as Pred
+participant "AlertService" as AlertSvc
+participant "Alert" as Alert
+participant "NotificationService" as NotifSvc
+participant "User" as User
+
+== Prédiction Quotidienne (Tous les jours à 2h00) ==
+
+Cron -> PredService : runDailyPredictions()
+activate PredService
+
+PredService -> DB : getAllActiveMachines()
+activate DB
+DB --> PredService : machines[]
+deactivate DB
+
+loop Pour chaque machine
+
+    PredService -> DB : getRecentMetrics(machineId, 30days)
+    activate DB
+    DB --> PredService : metrics[]
+    deactivate DB
+    
+    PredService -> DB : getRecentSmartData(machineId, 30days)
+    activate DB
+    DB --> PredService : smartData[]
+    deactivate DB
+    
+    PredService -> Feature : engineerFeatures(metrics, smartData)
+    activate Feature
+    Feature -> Feature : calculateMean7d()
+    Feature -> Feature : calculateStd7d()
+    Feature -> Feature : calculateTrends()
+    Feature --> PredService : features
+    deactivate Feature
+    
+    PredService -> Model : predictFailure(features)
+    activate Model
+    Model -> Model : loadModel()
+    Model -> Model : predict()
+    Model --> PredService : probability, confidence
+    deactivate Model
+    
+    PredService -> Pred : new Prediction()
+    activate Pred
+    Pred -> Pred : setProbability(probability)
+    Pred -> Pred : setRiskLevel()
+    Pred -> Pred : setEstimatedFailureDate()
+    Pred -> Pred : setConfidence(confidence)
+    Pred --> PredService : predictionObject
+    deactivate Pred
+    
+    PredService -> DB : savePrediction(prediction)
+    activate DB
+    DB --> PredService : success
+    deactivate DB
+    
+    alt Probabilité > 70% (Risque élevé)
+        
+        PredService -> AlertSvc : createAlert(prediction)
+        activate AlertSvc
+        
+        AlertSvc -> Alert : new Alert()
+        activate Alert
+        Alert -> Alert : setType(PREDICTION)
+        Alert -> Alert : setLevel(CRITICAL)
+        Alert -> Alert : setMessage()
+        Alert -> Alert : setPriority()
+        Alert --> AlertSvc : alertObject
+        deactivate Alert
+        
+        AlertSvc -> DB : saveAlert(alert)
+        activate DB
+        DB --> AlertSvc : alertId
+        deactivate DB
+        
+        AlertSvc -> NotifSvc : sendNotifications(alert)
+        activate NotifSvc
+        
+        NotifSvc -> DB : getTechnicians()
+        activate DB
+        DB --> NotifSvc : users[]
+        deactivate DB
+        
+        loop Pour chaque technicien
+            NotifSvc -> User : sendEmail(alert)
+            activate User
+            User --> NotifSvc : sent
+            deactivate User
+            
+            NotifSvc -> User : sendPushNotification(alert)
+            activate User
+            User --> NotifSvc : sent
+            deactivate User
+        end
+        
+        NotifSvc --> AlertSvc : notificationsSent
+        deactivate NotifSvc
+        
+        AlertSvc --> PredService : alertCreated
+        deactivate AlertSvc
+        
+    else Probabilité < 70% (Risque faible/moyen)
+        PredService -> PredService : logPrediction()
+        note right
+          Pas d'alerte générée
+          Prédiction enregistrée
+          pour suivi
+        end note
+    end
+    
+end
+
+PredService --> Cron : predictionsCompleted
+deactivate PredService
+
+note right of Cron
+  Le système analyse toutes
+  les machines quotidiennement
+  et génère des alertes pour
+  les machines à risque
+end note
+
+@enduml
+
+@startuml Sequence_3_Detection_Anomalie
+title Séquence 3 : Détection d'Anomalie en Temps Réel
+
+participant "API Server" as API
+participant "DataProcessor" as Processor
+participant "AnomalyDetector" as Detector
+database "Database" as DB
+participant "Anomaly" as Anomaly
+participant "AlertService" as AlertSvc
+participant "Alert" as Alert
+participant "NotificationService" as NotifSvc
+
+== Réception de Nouvelles Données ==
+
+API -> Processor : processNewData(metrics)
+activate Processor
+
+Processor -> DB : getHistoricalData(machineId, 7days)
+activate DB
+DB --> Processor : historicalMetrics[]
+deactivate DB
+
+Processor -> Detector : detectAnomaly(currentMetrics, historicalMetrics)
+activate Detector
+
+Detector -> Detector : calculateStatistics(historical)
+note right
+  Calcul de la moyenne
+  et écart-type sur 7 jours
+end note
+
+Detector -> Detector : compareWithThresholds(current)
+
+alt Anomalie Détectée
+
+    Detector -> Detector : calculateSeverity()
+    Detector -> Detector : identifyAnomalyType()
+    
+    Detector -> Anomaly : new Anomaly()
+    activate Anomaly
+    Anomaly -> Anomaly : setType(CPU_SPIKE)
+    Anomaly -> Anomaly : setSeverity(HIGH)
+    Anomaly -> Anomaly : setDetectedValue()
+    Anomaly -> Anomaly : setExpectedValue()
+    Anomaly --> Detector : anomalyObject
+    deactivate Anomaly
+    
+    Detector --> Processor : anomaly
+    deactivate Detector
+    
+    Processor -> DB : saveAnomaly(anomaly)
+    activate DB
+    DB --> Processor : anomalyId
+    deactivate DB
+    
+    alt Sévérité >= HIGH
+        
+        Processor -> AlertSvc : createAlert(anomaly)
+        activate AlertSvc
+        
+        AlertSvc -> Alert : new Alert()
+        activate Alert
+        Alert -> Alert : setType(ANOMALY)
+        Alert -> Alert : setLevel(WARNING)
+        Alert -> Alert : setMessage()
+        Alert --> AlertSvc : alertObject
+        deactivate Alert
+        
+        AlertSvc -> DB : saveAlert(alert)
+        activate DB
+        DB --> AlertSvc : alertId
+        deactivate DB
+        
+        AlertSvc -> NotifSvc : sendNotifications(alert)
+        activate NotifSvc
+        NotifSvc -> NotifSvc : sendEmail()
+        NotifSvc -> NotifSvc : sendPush()
+        NotifSvc --> AlertSvc : sent
+        deactivate NotifSvc
+        
+        AlertSvc --> Processor : alertCreated
+        deactivate AlertSvc
+        
+    end
+    
+else Pas d'Anomalie
+    Detector --> Processor : null
+    deactivate Detector
+    Processor -> Processor : logNormalBehavior()
+end
+
+Processor --> API : processed
+deactivate Processor
+
+note right of Detector
+  Le détecteur d'anomalies
+  analyse chaque nouvelle
+  donnée en temps réel
+end note
+
+@enduml
+
+@startuml Sequence_4_Consultation_Dashboard
+title Séquence 4 : Consultation du Dashboard par un Technicien
+
+actor "Technicien" as Tech
+participant "WebApp" as Web
+participant "API Server" as API
+participant "DashboardService" as DashSvc
+database "Database" as DB
+participant "HealthScoreCalc" as HealthCalc
+
+== Authentification ==
+
+Tech -> Web : login(username, password)
+activate Web
+
+Web -> API : POST /api/auth/login
+activate API
+
+API -> DB : validateCredentials()
+activate DB
+DB --> API : user, token
+deactivate DB
+
+API --> Web : {user, token}
+deactivate API
+
+Web -> Web : storeToken()
+Web --> Tech : Dashboard Page
+deactivate Web
+
+== Chargement du Dashboard ==
+
+Tech -> Web : loadDashboard()
+activate Web
+
+Web -> API : GET /api/dashboard\nAuthorization: Bearer {token}
+activate API
+
+API -> DashSvc : getDashboardData(userId)
+activate DashSvc
+
+par Chargement Parallèle des Données
+
+    DashSvc -> DB : getMachinesCount()
+    activate DB
+    DB --> DashSvc : totalMachines
+    deactivate DB
+    
+    DashSvc -> DB : getActiveAlerts()
+    activate DB
+    DB --> DashSvc : alerts[]
+    deactivate DB
+    
+    DashSvc -> DB : getRecentPredictions()
+    activate DB
+    DB --> DashSvc : predictions[]
+    deactivate DB
+    
+    DashSvc -> DB : getAnomaliesCount()
+    activate DB
+    DB --> DashSvc : anomaliesCount
+    deactivate DB
+    
+end
+
+DashSvc -> DB : getAllMachines()
+activate DB
+DB --> DashSvc : machines[]
+deactivate DB
+
+loop Pour chaque machine
+    DashSvc -> HealthCalc : calculateHealthScore(machineId)
+    activate HealthCalc
+    
+    HealthCalc -> DB : getRecentMetrics(machineId)
+    activate DB
+    DB --> HealthCalc : metrics
+    deactivate DB
+    
+    HealthCalc -> DB : getRecentSmartData(machineId)
+    activate DB
+    DB --> HealthCalc : smartData
+    deactivate DB
+    
+    HealthCalc -> DB : getMaintenanceHistory(machineId)
+    activate DB
+    DB --> HealthCalc : interventions[]
+    deactivate DB
+    
+    HealthCalc -> HealthCalc : calculateScore()
+    HealthCalc --> DashSvc : healthScore
+    deactivate HealthCalc
+end
+
+DashSvc --> API : dashboardData
+deactivate DashSvc
+
+API --> Web : {machines, alerts, predictions, stats}
+deactivate API
+
+Web -> Web : renderDashboard()
+Web -> Web : renderCharts()
+Web -> Web : renderAlerts()
+
+Web --> Tech : Dashboard Affiché
+deactivate Web
+
+note right of Tech
+  Le technicien voit :
+  - Vue d'ensemble du parc
+  - Alertes actives
+  - Machines à risque
+  - Graphiques de santé
+end note
+
+@enduml
+
+@startuml Sequence_5_Traitement_Alerte
+title Séquence 5 : Traitement d'une Alerte par un Technicien
+
+actor "Technicien" as Tech
+participant "WebApp" as Web
+participant "API Server" as API
+participant "AlertService" as AlertSvc
+database "Database" as DB
+participant "MaintenanceService" as MaintSvc
+participant "Recommendation" as Reco
+
+== Consultation de l'Alerte ==
+
+Tech -> Web : viewAlert(alertId)
+activate Web
+
+Web -> API : GET /api/alerts/{alertId}
+activate API
+
+API -> DB : getAlert(alertId)
+activate DB
+DB --> API : alert
+deactivate DB
+
+API -> DB : getPrediction(alert.predictionId)
+activate DB
+DB --> API : prediction
+deactivate DB
+
+API -> DB : getMachine(alert.machineId)
+activate DB
+DB --> API : machine
+deactivate DB
+
+API -> DB : getRecommendations(alert.machineId)
+activate DB
+DB --> API : recommendations[]
+deactivate DB
+
+API --> Web : {alert, prediction, machine, recommendations}
+deactivate API
+
+Web -> Web : displayAlertDetails()
+Web --> Tech : Détails de l'Alerte
+deactivate Web
+
+== Accusé de Réception ==
+
+Tech -> Web : acknowledgeAlert(alertId)
+activate Web
+
+Web -> API : POST /api/alerts/{alertId}/acknowledge
+activate API
+
+API -> AlertSvc : acknowledgeAlert(alertId, technicianId)
+activate AlertSvc
+
+AlertSvc -> DB : updateAlert(alertId, status=ACKNOWLEDGED)
+activate DB
+DB --> AlertSvc : success
+deactivate DB
+
+AlertSvc -> DB : logAction(alertId, technicianId, "ACKNOWLEDGED")
+activate DB
+DB --> AlertSvc : logged
+deactivate DB
+
+AlertSvc --> API : acknowledged
+deactivate AlertSvc
+
+API --> Web : success
+deactivate API
+
+Web --> Tech : Alerte Accusée
+deactivate Web
+
+== Création d'une Intervention ==
+
+Tech -> Web : createIntervention(alertId, machineId)
+activate Web
+
+Web -> API : POST /api/interventions\n{alertId, machineId, type, description}
+activate API
+
+API -> MaintSvc : createIntervention(data)
+activate MaintSvc
+
+MaintSvc -> DB : INSERT INTO maintenance_interventions
+activate DB
+DB --> MaintSvc : interventionId
+deactivate DB
+
+MaintSvc -> AlertSvc : updateAlertStatus(alertId, IN_PROGRESS)
+activate AlertSvc
+AlertSvc -> DB : updateAlert(alertId, status=IN_PROGRESS)
+activate DB
+DB --> AlertSvc : updated
+deactivate DB
+AlertSvc --> MaintSvc : updated
+deactivate AlertSvc
+
+MaintSvc --> API : intervention
+deactivate MaintSvc
+
+API --> Web : {interventionId, status}
+deactivate API
+
+Web --> Tech : Intervention Créée
+deactivate Web
+
+== Résolution et Clôture ==
+
+Tech -> Web : resolveIntervention(interventionId)
+activate Web
+
+Web -> API : PUT /api/interventions/{interventionId}/resolve\n{actions, cost, partsReplaced}
+activate API
+
+API -> MaintSvc : resolveIntervention(interventionId, data)
+activate MaintSvc
+
+MaintSvc -> DB : updateIntervention(status=COMPLETED)
+activate DB
+DB --> MaintSvc : updated
+deactivate DB
+
+MaintSvc -> AlertSvc : resolveAlert(alertId)
+activate AlertSvc
+AlertSvc -> DB : updateAlert(alertId, status=RESOLVED)
+activate DB
+DB --> AlertSvc : updated
+deactivate DB
+AlertSvc --> MaintSvc : resolved
+deactivate AlertSvc
+
+MaintSvc -> DB : updateMachineStatus(machineId, ACTIVE)
+activate DB
+DB --> MaintSvc : updated
+deactivate DB
+
+MaintSvc --> API : resolved
+deactivate MaintSvc
+
+API --> Web : success
+deactivate API
+
+Web --> Tech : Intervention Résolue
+deactivate Web
+
+note right of Tech
+  Workflow complet :
+  1. Consultation alerte
+  2. Accusé réception
+  3. Création intervention
+  4. Résolution
+  5. Clôture
+end note
+
+@enduml
+
+@startuml Sequence_6_Entrainement_Modele
+title Séquence 6 : Entraînement du Modèle d'IA
+
+actor "Administrateur" as Admin
+participant "WebApp" as Web
+participant "API Server" as API
+participant "MLService" as ML
+database "Database" as DB
+participant "PredictionModel" as Model
+participant "FeatureEngine" as Feature
+
+== Déclenchement de l'Entraînement ==
+
+Admin -> Web : triggerModelTraining()
+activate Web
+
+Web -> API : POST /api/ml/train
+activate API
+
+API -> ML : trainModel()
+activate ML
+
+ML -> ML : logTrainingStart()
+
+== Collecte des Données d'Entraînement ==
+
+ML -> DB : getHistoricalMetrics(6months)
+activate DB
+DB --> ML : metrics[]
+deactivate DB
+
+ML -> DB : getHistoricalSmartData(6months)
+activate DB
+DB --> ML : smartData[]
+deactivate DB
+
+ML -> DB : getMaintenanceInterventions(6months)
+activate DB
+DB --> ML : interventions[]
+deactivate DB
+
+note right of ML
+  Collecte de 6 mois
+  de données historiques
+  pour l'entraînement
+end note
+
+== Préparation des Données ==
+
+ML -> Feature : engineerFeatures(metrics, smartData)
+activate Feature
+
+Feature -> Feature : calculateStatistics()
+Feature -> Feature : createTemporalFeatures()
+Feature -> Feature : createMetierFeatures()
+Feature -> Feature : normalizeData()
+
+Feature --> ML : features[]
+deactivate Feature
+
+ML -> ML : labelData(features, interventions)
+note right
+  Labellisation :
+  Panne dans 30 jours ? Oui/Non
+end note
+
+ML -> ML : splitTrainTest(features, 80/20)
+
+== Entraînement du Modèle ==
+
+ML -> Model : train(X_train, y_train)
+activate Model
+
+Model -> Model : initializeRandomForest()
+Model -> Model : fit(X_train, y_train)
+
+note right of Model
+  Entraînement du modèle
+  Random Forest avec
+  100 arbres de décision
+end note
+
+Model --> ML : trainedModel
+deactivate Model
+
+== Évaluation du Modèle ==
+
+ML -> Model : evaluate(X_test, y_test)
+activate Model
+
+Model -> Model : predict(X_test)
+Model -> Model : calculateAccuracy()
+Model -> Model : calculatePrecision()
+Model -> Model : calculateRecall()
+Model -> Model : calculateF1Score()
+
+Model --> ML : metrics {accuracy, precision, recall, f1}
+deactivate Model
+
+alt Accuracy > 85%
+    
+    ML -> Model : saveModel()
+    activate Model
+    Model -> Model : serialize()
+    Model --> ML : modelSaved
+    deactivate Model
+    
+    ML -> DB : saveModelMetrics(metrics)
+    activate DB
+    DB --> ML : saved
+    deactivate DB
+    
+    ML -> DB : updateModelVersion()
+    activate DB
+    DB --> ML : versionUpdated
+    deactivate DB
+    
+    ML --> API : {status: "success", metrics}
+    
+else Accuracy < 85%
+    
+    ML -> ML : logFailure()
+    ML --> API : {status: "failed", reason: "Low accuracy"}
+    
+end
+
+deactivate ML
+
+API --> Web : trainingResult
+deactivate API
+
+Web --> Admin : Résultat de l'Entraînement
+deactivate Web
+
+note right of Admin
+  L'administrateur voit :
+  - Précision du modèle
+  - Métriques de performance
+  - Statut de l'entraînement
+end note
+
+@enduml

@@ -1,0 +1,17 @@
+@startuml Epic_3_IA_Prediction
+
+title EPIC 3 — IA / Prédiction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "🟣 EPIC 3 — IA / Prédiction" #Lavender {
+  usecase "US7: Générer une prédiction\nde panne (LSTM)" as US7
+  usecase "US8: Voir le niveau\nde risque (7j/14j/30j)" as US8
+  usecase "US9: Voir les facteurs\ncontribuant au risque" as US9
+}
+
+US7 ..> US8 : <<include>>
+US8 ..> US9 : <<include>>
+
+@enduml

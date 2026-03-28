@@ -1,0 +1,269 @@
+@startuml
+title Diagramme de Classes - Système de Maintenance Prédictive (Version PFE)
+
+' ============================================
+' CLASSES MÉTIER PRINCIPALES
+' ============================================
+
+class Machine {
+    - id: String
+    - hostname: String
+    - ipAddress: String
+    - serialNumber: String
+    - model: String
+    - status: MachineStatus
+    - location: String
+    - purchaseDate: Date
+    --
+    + getId(): String
+    + getStatus(): MachineStatus
+    + isUnderWarranty(): boolean
+}
+
+enum MachineStatus {
+    ACTIVE
+    MAINTENANCE
+    FAILED
+    RETIRED
+}
+
+class SystemMetrics {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - cpuUsage: float
+    - memoryUsage: float
+    - diskUsage: float
+    - temperature: float
+    --
+    + getCpuUsage(): float
+    + isAnomalous(): boolean
+}
+
+class SmartData {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - diskHealth: int
+    - readErrors: int
+    - writeErrors: int
+    --
+    + getHealthPercentage(): int
+    + isCritical(): boolean
+}
+
+' ============================================
+' AGENT DE COLLECTE
+' ============================================
+
+class Agent {
+    - machineId: String
+    - version: String
+    - lastHeartbeat: DateTime
+    --
+    + collectMetrics(): SystemMetrics
+    + collectSmartData(): SmartData
+    + sendData(data: Object): boolean
+}
+
+' ============================================
+' INTELLIGENCE ARTIFICIELLE
+' ============================================
+
+class PredictionModel {
+    - modelVersion: String
+    - accuracy: float
+    - lastTrainingDate: DateTime
+    --
+    + predictFailure(metrics: SystemMetrics): Prediction
+    + trainModel(data: SystemMetrics[]): void
+}
+
+class Prediction {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - probability: float
+    - riskLevel: RiskLevel
+    - estimatedFailureDate: Date
+    --
+    + getProbability(): float
+    + shouldAlert(): boolean
+}
+
+enum RiskLevel {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+class AnomalyDetector {
+    - threshold: float
+    --
+    + detectAnomaly(metrics: SystemMetrics): Anomaly
+}
+
+class Anomaly {
+    - id: String
+    - machineId: String
+    - timestamp: DateTime
+    - type: AnomalyType
+    - severity: String
+    --
+    + getSeverity(): String
+}
+
+enum AnomalyType {
+    CPU_SPIKE
+    MEMORY_LEAK
+    DISK_FULL
+    TEMPERATURE_HIGH
+}
+
+' ============================================
+' ALERTES
+' ============================================
+
+class Alert {
+    - id: String
+    - machineId: String
+    - type: AlertType
+    - level: AlertLevel
+    - message: String
+    - createdAt: DateTime
+    - status: AlertStatus
+    --
+    + acknowledge(userId: String): void
+    + isAcknowledged(): boolean
+}
+
+enum AlertType {
+    PREDICTION
+    ANOMALY
+    THRESHOLD_EXCEEDED
+}
+
+enum AlertLevel {
+    WARNING
+    ERROR
+    CRITICAL
+}
+
+enum AlertStatus {
+    NEW
+    ACKNOWLEDGED
+    RESOLVED
+}
+
+' ============================================
+' MAINTENANCE
+' ============================================
+
+class MaintenanceIntervention {
+    - id: String
+    - machineId: String
+    - type: InterventionType
+    - description: String
+    - technicianName: String
+    - startDate: DateTime
+    - cost: float
+    - status: String
+    --
+    + getDuration(): int
+    + getTotalCost(): float
+}
+
+enum InterventionType {
+    CORRECTIVE
+    PREVENTIVE
+    PREDICTIVE
+}
+
+' ============================================
+' UTILISATEURS
+' ============================================
+
+class User {
+    - id: String
+    - username: String
+    - email: String
+    - role: UserRole
+    - firstName: String
+    - lastName: String
+    --
+    + authenticate(password: String): boolean
+    + hasPermission(permission: String): boolean
+}
+
+enum UserRole {
+    ADMIN
+    TECHNICIAN
+    VIEWER
+}
+
+' ============================================
+' REPORTING
+' ============================================
+
+class Report {
+    - id: String
+    - title: String
+    - type: ReportType
+    - generatedBy: String
+    - generatedAt: DateTime
+    --
+    + generateReport(): void
+    + exportPDF(): byte[]
+}
+
+enum ReportType {
+    SYSTEM_HEALTH
+    PREDICTIONS
+    MAINTENANCE_HISTORY
+}
+
+' ============================================
+' RELATIONS
+' ============================================
+
+' Machine Relations
+Machine "1" -- "0..*" SystemMetrics : collecte >
+Machine "1" -- "0..*" SmartData : possède >
+Machine "1" -- "0..*" MaintenanceIntervention : subit >
+Machine "1" -- "0..*" Prediction : a >
+Machine "1" -- "0..*" Alert : génère >
+Machine "1" -- "0..*" Anomaly : présente >
+Machine -- MachineStatus
+
+' Agent Relations
+Agent "1" -- "1" Machine : surveille >
+Agent ..> SystemMetrics : crée >
+Agent ..> SmartData : crée >
+
+' AI Relations
+PredictionModel ..> SystemMetrics : analyse >
+PredictionModel "1" -- "0..*" Prediction : génère >
+Prediction -- RiskLevel
+
+AnomalyDetector ..> SystemMetrics : analyse >
+AnomalyDetector "1" -- "0..*" Anomaly : détecte >
+Anomaly -- AnomalyType
+
+' Alert Relations
+Prediction "1" -- "0..1" Alert : déclenche >
+Anomaly "1" -- "0..1" Alert : déclenche >
+Alert -- AlertType
+Alert -- AlertLevel
+Alert -- AlertStatus
+
+' User Relations
+User -- UserRole
+User "1" -- "0..*" Alert : traite >
+User "1" -- "0..*" Report : génère >
+User "1" -- "0..*" MaintenanceIntervention : effectue >
+
+' Maintenance Relations
+MaintenanceIntervention -- InterventionType
+
+@enduml

@@ -1,0 +1,96 @@
+@startuml
+left to right direction
+
+title Diagramme de Cas d'Utilisation - Système de Maintenance Prédictive
+
+' ============================================
+' ACTEURS
+' ============================================
+actor "Agent\n(Système)" as Agent
+actor "Technicien IT" as Tech
+actor "Administrateur" as Admin
+
+' ============================================
+' CAS D'UTILISATION
+' ============================================
+rectangle "Système de Maintenance Prédictive" {
+    
+    ' --- Collecte de Données ---
+    usecase "UC1: Collecter et envoyer\nles données système" as UC1
+    
+    ' --- Analyse et Prédiction (IA) ---
+    usecase "UC2: Analyser les données\net prédire les pannes" as UC2
+    usecase "UC3: Détecter les anomalies" as UC3
+    usecase "UC4: Générer des alertes" as UC4
+    
+    ' --- Consultation et Suivi ---
+    usecase "UC5: Consulter le dashboard" as UC5
+    usecase "UC6: Visualiser l'historique\ndes machines" as UC6
+    usecase "UC7: Traiter les alertes" as UC7
+    usecase "UC8: Gérer les interventions\nde maintenance" as UC8
+    
+    ' --- Reporting ---
+    usecase "UC9: Exporter des rapports" as UC9
+    
+    ' --- Administration ---
+    usecase "UC10: Gérer les utilisateurs" as UC10
+    usecase "UC11: Configurer les seuils\nd'alerte" as UC11
+    usecase "UC12: Déployer les agents" as UC12
+}
+
+' ============================================
+' RELATIONS ACTEURS → USE CASES
+' ============================================
+
+' Agent (Système automatique)
+Agent --> UC1
+
+' Technicien IT
+Tech --> UC5
+Tech --> UC6
+Tech --> UC7
+Tech --> UC8
+Tech --> UC9
+
+' Administrateur
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+
+' ============================================
+' RELATIONS ENTRE USE CASES
+' ============================================
+
+' Relations <<include>> (dépendances obligatoires)
+UC2 ..> UC1 : <<include>>
+UC3 ..> UC1 : <<include>>
+UC4 ..> UC2 : <<include>>
+UC4 ..> UC3 : <<include>>
+
+' Relations <<extend>> (extensions optionnelles)
+UC9 ..> UC6 : <<extend>>
+
+' ============================================
+' NOTES EXPLICATIVES
+' ============================================
+
+note right of Agent
+  L'agent s'exécute automatiquement
+  sur chaque PC et collecte les
+  données système toutes les heures
+end note
+
+note right of UC2
+  Le système utilise un modèle
+  de Machine Learning pour
+  prédire les pannes futures
+end note
+
+note bottom of UC4
+  Les alertes sont générées
+  automatiquement quand :
+  - Prédiction > 70%
+  - Anomalie détectée
+end note
+
+@enduml

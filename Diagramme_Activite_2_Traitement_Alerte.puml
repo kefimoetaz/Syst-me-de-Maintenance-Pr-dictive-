@@ -1,0 +1,85 @@
+@startuml
+title Diagramme d'Activité 2 : Traitement d'une Alerte par le Technicien
+
+|Technicien|
+start
+:Recevoir notification\nd'alerte;
+
+:Se connecter au\ndashboard;
+
+:Consulter les détails\nde l'alerte;
+note right
+  - Machine concernée
+  - Probabilité de panne
+  - Niveau de risque
+  - Métriques anormales
+end note
+
+:Analyser les données\nhistoriques;
+
+if (Alerte justifiée ?) then (oui)
+  :Accuser réception\nde l'alerte;
+  
+  |Base de Données|
+  :Mettre à jour statut\n(ACKNOWLEDGED);
+  
+  |Technicien|
+  :Évaluer l'urgence\nde l'intervention;
+  
+  if (Intervention immédiate ?) then (oui)
+    :Créer intervention\nurgente;
+    
+    |Base de Données|
+    :Enregistrer intervention\n(type: PREVENTIVE);
+    
+    |Technicien|
+    :Se déplacer sur site;
+    
+    :Effectuer maintenance\npréventive;
+    note right
+      - Remplacement composant
+      - Nettoyage système
+      - Mise à jour logicielle
+    end note
+    
+    :Tester le système;
+    
+    if (Problème résolu ?) then (oui)
+      :Marquer intervention\ncomme COMPLETED;
+      
+      |Base de Données|
+      :Mettre à jour statut alerte\n(RESOLVED);
+      
+      :Mettre à jour statut machine\n(ACTIVE);
+    else (non)
+      :Créer nouvelle alerte\n(problème persistant);
+      
+      :Escalader au support\nniveau 2;
+    endif
+    
+  else (non)
+    :Planifier intervention\nultérieure;
+    
+    |Base de Données|
+    :Créer intervention planifiée;
+    
+    :Mettre à jour statut alerte\n(IN_PROGRESS);
+  endif
+  
+else (non - faux positif)
+  :Marquer alerte comme\nfaux positif;
+  
+  |Base de Données|
+  :Mettre à jour statut\n(RESOLVED);
+  
+  :Enregistrer feedback\npour améliorer le modèle;
+endif
+
+|Technicien|
+:Ajouter commentaires\net observations;
+
+:Générer rapport\nd'intervention;
+
+stop
+
+@enduml

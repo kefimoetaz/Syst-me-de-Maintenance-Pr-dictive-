@@ -1,0 +1,37 @@
+@startmindmap
+title Backlog Produit - Système de Maintenance Prédictive
+
+* Système\nMaintenance\nPrédictive
+
+** Collecte Données
+*** Agent collecte
+*** API Backend
+*** Base de données
+
+** Intelligence Artificielle
+*** Préparation données
+*** Modèle ML (Random Forest)
+*** Service prédiction
+
+** Alertes
+*** Génération (seuil 70%)
+*** Notifications (Email/SMS)
+*** Détection anomalies
+
+left side
+
+** Interface Web
+*** Dashboard
+*** Gestion alertes
+*** Historique machines
+
+** Maintenance
+*** Interventions
+*** Reporting
+
+** Administration
+*** Gestion utilisateurs
+*** Configuration système
+*** Déploiement agents
+
+@endmindmap

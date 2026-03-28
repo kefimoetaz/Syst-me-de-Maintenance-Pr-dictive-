@@ -1,0 +1,44 @@
+@startgantt
+title Planning Projet - Système de Maintenance Prédictive (1 Fév - 30 Avril 2025)
+
+printscale weekly
+Project starts 2025-02-01
+
+-- Sprint 1: Collecte de Données --
+[Sprint 1: Collecte de Données] starts 2025-02-01
+[Sprint 1: Collecte de Données] lasts 14 days
+[Sprint 1: Collecte de Données] is colored in LightGreen
+
+-- Sprint 2: Intelligence Artificielle --
+[Sprint 2: IA & ML] starts 2025-02-15
+[Sprint 2: IA & ML] lasts 21 days
+[Sprint 2: IA & ML] is colored in Orange
+
+-- Sprint 3: Alertes & Notifications --
+[Sprint 3: Alertes & Notifications] starts 2025-03-08
+[Sprint 3: Alertes & Notifications] lasts 14 days
+[Sprint 3: Alertes & Notifications] is colored in Yellow
+
+-- Sprint 4: Interface Web --
+[Sprint 4: Interface Web] starts 2025-03-22
+[Sprint 4: Interface Web] lasts 14 days
+[Sprint 4: Interface Web] is colored in LightCoral
+
+-- Sprint 5: Maintenance & Admin --
+[Sprint 5: Maintenance & Admin] starts 2025-04-05
+[Sprint 5: Maintenance & Admin] lasts 14 days
+[Sprint 5: Maintenance & Admin] is colored in LightPink
+
+-- Sprint 6: Tests & Déploiement --
+[Sprint 6: Tests & Déploiement] starts 2025-04-19
+[Sprint 6: Tests & Déploiement] lasts 12 days
+[Sprint 6: Tests & Déploiement] is colored in LightGray
+
+-- Jalons Importants --
+[Jalon 1: Backend fonctionnel] happens 2025-02-14
+[Jalon 2: IA opérationnelle] happens 2025-03-07
+[Jalon 3: Alertes actives] happens 2025-03-21
+[Jalon 4: Interface complète] happens 2025-04-04
+[Jalon 5: Production] happens 2025-04-30
+
+@endgantt
