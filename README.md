@@ -336,11 +336,6 @@ Agent optionnel : `docker-compose --profile with-agent up`
 
 ---
 
-## 📚 Documentation
-
-| Fichier | Contenu |
--
-| `PFE_ADVANCED_TECHNICAL_DOCUMENTATION.md` | Analyse technique complète, architecture, sécurité, défense PFE |
 
 ---
 
